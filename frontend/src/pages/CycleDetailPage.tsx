@@ -467,15 +467,19 @@ const CycleDetailPage = () => {
                 </div>
               </div>
 
-              {/* Orbital map */}
-              <div className="flex-shrink-0 flex flex-col items-center gap-3">
-                <OrbitalCycleMap steps={cycle.steps} activeStep={activeStep}
+              {/* Orbital map - hidden on mobile */}
+              <div className="hidden lg:flex flex-shrink-0 flex-col items-center gap-3">
+                <OrbitalCycleMap
+                  steps={cycle.steps}
+                  activeStep={activeStep}
                   completedSteps={completedSteps}
-                  onSelect={i => { selectStep(i); setActiveTab("journey"); }} />
+                  onSelect={i => { selectStep(i); setActiveTab("journey"); }}
+                />
                 <p className="text-xs text-center" style={{ color: "rgba(255,255,255,0.3)" }}>
                   Click any node to explore that step
                 </p>
               </div>
+
             </div>
           </motion.div>
         </div>
