@@ -9,7 +9,15 @@ import {
   GripVertical,
   ExternalLink,
 } from "lucide-react";
-import { cycleService, CycleData, CycleStep, QuickFact } from "@/services/cycleService";
+import {
+  cycleService,
+  CycleData,
+  CycleStep,
+  Flashcard,
+  QuizQuestion,
+  MemoryPalaceEntry,
+  QuickFact,
+} from "@/services/cycleService";
 import { categoryService, Category } from "@/services/categoryService";
 import { classLevelService, ClassLevel } from "@/services/classLevelService";
 
@@ -26,12 +34,33 @@ type CycleFormData = {
   tagsText: string;
   steps: CycleStep[];
   quickFacts: QuickFact[];
+  flashcards: Flashcard[];
+  quizQuestions: QuizQuestion[];
+  memoryPalace: MemoryPalaceEntry[];
 };
 
 const emptyStep = (): CycleStep => ({
   title: "",
   description: "",
   detail: "",
+  memoryTrick: "",
+});
+
+const emptyFlashcard = (): Flashcard => ({
+  frontTitle: "",
+  frontDescription: "",
+  backDetail: "",
+  memoryTrick: "",
+});
+
+const emptyQuizQuestion = (): QuizQuestion => ({
+  question: "",
+  options: ["", "", "", ""],
+  answer: "",
+});
+
+const emptyMemoryPalaceEntry = (): MemoryPalaceEntry => ({
+  title: "",
   memoryTrick: "",
 });
 
@@ -52,6 +81,9 @@ const emptyForm = (): CycleFormData => ({
   color: "#059669",
   tagsText: "",
   steps: [emptyStep()],
+  flashcards: [emptyFlashcard()],
+  quizQuestions: [emptyQuizQuestion()],
+  memoryPalace: [emptyMemoryPalaceEntry()],
   quickFacts: [emptyFact()],
 });
 
@@ -62,7 +94,9 @@ const slugify = (value: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-const normalizeFormData = (cycle?: Partial<CycleData> | null): CycleFormData => ({
+const normalizeFormData = (
+  cycle?: Partial<CycleData> | null,
+): CycleFormData => ({
   title: cycle?.title || "",
   slug: cycle?.slug || "",
   description: cycle?.description || "",
@@ -81,6 +115,27 @@ const normalizeFormData = (cycle?: Partial<CycleData> | null): CycleFormData => 
         memoryTrick: step.memoryTrick || "",
       }))
     : [emptyStep()],
+  flashcards: cycle?.flashcards?.length
+    ? cycle.flashcards.map((card) => ({
+        frontTitle: card.frontTitle || "",
+        frontDescription: card.frontDescription || "",
+        backDetail: card.backDetail || "",
+        memoryTrick: card.memoryTrick || "",
+      }))
+    : [emptyFlashcard()],
+  quizQuestions: cycle?.quizQuestions?.length
+    ? cycle.quizQuestions.map((q) => ({
+        question: q.question || "",
+        options: Array.isArray(q.options) ? q.options : ["", "", "", ""],
+        answer: q.answer || "",
+      }))
+    : [emptyQuizQuestion()],
+  memoryPalace: cycle?.memoryPalace?.length
+    ? cycle.memoryPalace.map((m) => ({
+        title: m.title || "",
+        memoryTrick: m.memoryTrick || "",
+      }))
+    : [emptyMemoryPalaceEntry()],
   quickFacts: cycle?.quickFacts?.length
     ? cycle.quickFacts.map((fact) => ({
         label: fact.label || "",
@@ -159,6 +214,45 @@ const AdminContent = () => {
     }));
   };
 
+  const updateFlashcard = (
+    index: number,
+    key: keyof Flashcard,
+    value: string,
+  ) => {
+    setFormData((current) => ({
+      ...current,
+      flashcards: current.flashcards.map((card, cardIndex) =>
+        cardIndex === index ? { ...card, [key]: value } : card,
+      ),
+    }));
+  };
+
+  const updateQuizQuestion = (
+    index: number,
+    key: keyof QuizQuestion,
+    value: string | string[],
+  ) => {
+    setFormData((current) => ({
+      ...current,
+      quizQuestions: current.quizQuestions.map((q, qIndex) =>
+        qIndex === index ? { ...q, [key]: value } : q,
+      ),
+    }));
+  };
+
+  const updateMemoryEntry = (
+    index: number,
+    key: keyof MemoryPalaceEntry,
+    value: string,
+  ) => {
+    setFormData((current) => ({
+      ...current,
+      memoryPalace: current.memoryPalace.map((m, mIndex) =>
+        mIndex === index ? { ...m, [key]: value } : m,
+      ),
+    }));
+  };
+
   const updateFact = (index: number, key: keyof QuickFact, value: string) => {
     setFormData((current) => ({
       ...current,
@@ -185,6 +279,36 @@ const AdminContent = () => {
         current.quickFacts.length === 1
           ? [emptyFact()]
           : current.quickFacts.filter((_, factIndex) => factIndex !== index),
+    }));
+  };
+
+  const removeFlashcard = (index: number) => {
+    setFormData((current) => ({
+      ...current,
+      flashcards:
+        current.flashcards.length === 1
+          ? [emptyFlashcard()]
+          : current.flashcards.filter((_, cardIndex) => cardIndex !== index),
+    }));
+  };
+
+  const removeQuizQuestion = (index: number) => {
+    setFormData((current) => ({
+      ...current,
+      quizQuestions:
+        current.quizQuestions.length === 1
+          ? [emptyQuizQuestion()]
+          : current.quizQuestions.filter((_, qIndex) => qIndex !== index),
+    }));
+  };
+
+  const removeMemoryEntry = (index: number) => {
+    setFormData((current) => ({
+      ...current,
+      memoryPalace:
+        current.memoryPalace.length === 1
+          ? [emptyMemoryPalaceEntry()]
+          : current.memoryPalace.filter((_, mIndex) => mIndex !== index),
     }));
   };
 
@@ -246,6 +370,29 @@ const AdminContent = () => {
         memoryTrick: step.memoryTrick?.trim() || "",
       }))
       .filter((step) => step.title && step.description && step.detail),
+    flashcards: formData.flashcards
+      .map((card) => ({
+        frontTitle: card.frontTitle.trim(),
+        frontDescription: card.frontDescription.trim(),
+        backDetail: card.backDetail.trim(),
+        memoryTrick: card.memoryTrick?.trim() || "",
+      }))
+      .filter(
+        (card) => card.frontTitle && card.frontDescription && card.backDetail,
+      ),
+    quizQuestions: formData.quizQuestions
+      .map((q) => ({
+        question: q.question.trim(),
+        options: q.options.map((o) => o.trim()).filter(Boolean),
+        answer: q.answer.trim(),
+      }))
+      .filter((q) => q.question && q.options.length >= 2 && q.answer),
+    memoryPalace: formData.memoryPalace
+      .map((m) => ({
+        title: m.title.trim(),
+        memoryTrick: m.memoryTrick?.trim() || "",
+      }))
+      .filter((m) => m.title),
     quickFacts: formData.quickFacts
       .map((fact) => ({
         label: fact.label.trim(),
@@ -352,7 +499,8 @@ const AdminContent = () => {
                 {editingId ? "Edit Cycle" : "Create New Cycle"}
               </h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Steps, quiz, flashcards, memory palace, and notes all use this data.
+                Steps, quiz, flashcards, memory palace, and notes all use this
+                data.
               </p>
             </div>
             {formData.slug && (
@@ -383,7 +531,9 @@ const AdminContent = () => {
                   type="text"
                   placeholder="Slug *"
                   value={formData.slug}
-                  onChange={(event) => updateForm("slug", slugify(event.target.value))}
+                  onChange={(event) =>
+                    updateForm("slug", slugify(event.target.value))
+                  }
                   className="px-4 py-2 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
                   required
                 />
@@ -392,7 +542,9 @@ const AdminContent = () => {
               <textarea
                 placeholder="Description *"
                 value={formData.description}
-                onChange={(event) => updateForm("description", event.target.value)}
+                onChange={(event) =>
+                  updateForm("description", event.target.value)
+                }
                 className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
                 rows={3}
                 required
@@ -401,7 +553,9 @@ const AdminContent = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <select
                   value={formData.categoryId}
-                  onChange={(event) => updateForm("categoryId", event.target.value)}
+                  onChange={(event) =>
+                    updateForm("categoryId", event.target.value)
+                  }
                   className="px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
                   required
                 >
@@ -415,7 +569,9 @@ const AdminContent = () => {
 
                 <select
                   value={formData.classLevelId}
-                  onChange={(event) => updateForm("classLevelId", event.target.value)}
+                  onChange={(event) =>
+                    updateForm("classLevelId", event.target.value)
+                  }
                   className="px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
                   required
                 >
@@ -433,14 +589,18 @@ const AdminContent = () => {
                   type="url"
                   placeholder="Video URL"
                   value={formData.videoUrl}
-                  onChange={(event) => updateForm("videoUrl", event.target.value)}
+                  onChange={(event) =>
+                    updateForm("videoUrl", event.target.value)
+                  }
                   className="px-4 py-2 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
                 />
                 <input
                   type="text"
                   placeholder="Cover image URL"
                   value={formData.coverImage}
-                  onChange={(event) => updateForm("coverImage", event.target.value)}
+                  onChange={(event) =>
+                    updateForm("coverImage", event.target.value)
+                  }
                   className="px-4 py-2 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
                 />
               </div>
@@ -457,7 +617,9 @@ const AdminContent = () => {
                   type="text"
                   placeholder="Tags separated by commas"
                   value={formData.tagsText}
-                  onChange={(event) => updateForm("tagsText", event.target.value)}
+                  onChange={(event) =>
+                    updateForm("tagsText", event.target.value)
+                  }
                   className="px-4 py-2 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
                 />
                 <input
@@ -476,7 +638,8 @@ const AdminContent = () => {
                     Learning Steps
                   </h4>
                   <p className="text-sm text-muted-foreground">
-                    These power the journey tab, flashcards, quiz, and memory palace.
+                    These power the journey tab, flashcards, quiz, and memory
+                    palace.
                   </p>
                 </div>
                 <button
@@ -496,7 +659,10 @@ const AdminContent = () => {
 
               <div className="space-y-4">
                 {formData.steps.map((step, index) => (
-                  <div key={`${index}-${step.title}`} className="rounded-2xl border border-border bg-card/60 p-4 space-y-3">
+                  <div
+                    key={`${index}-${step.title}`}
+                    className="rounded-2xl border border-border bg-card/60 p-4 space-y-3"
+                  >
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                         <GripVertical className="w-4 h-4 text-muted-foreground" />
@@ -516,7 +682,9 @@ const AdminContent = () => {
                         type="text"
                         placeholder="Step title *"
                         value={step.title}
-                        onChange={(event) => updateStep(index, "title", event.target.value)}
+                        onChange={(event) =>
+                          updateStep(index, "title", event.target.value)
+                        }
                         className="px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
                       />
                       <input
@@ -533,7 +701,9 @@ const AdminContent = () => {
                     <textarea
                       placeholder="Short description for cards and quiz *"
                       value={step.description}
-                      onChange={(event) => updateStep(index, "description", event.target.value)}
+                      onChange={(event) =>
+                        updateStep(index, "description", event.target.value)
+                      }
                       rows={2}
                       className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
                     />
@@ -541,7 +711,9 @@ const AdminContent = () => {
                     <textarea
                       placeholder="Detailed explanation for the journey panel and flashcard back *"
                       value={step.detail}
-                      onChange={(event) => updateStep(index, "detail", event.target.value)}
+                      onChange={(event) =>
+                        updateStep(index, "detail", event.target.value)
+                      }
                       rows={4}
                       className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
                     />
@@ -550,7 +722,273 @@ const AdminContent = () => {
               </div>
             </section>
 
-            <section className="space-y-4">
+            <section className="space-y-4 border-t-2 border-border pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-display text-lg font-semibold text-foreground">
+                    📇 Flashcards
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Front and back cards for spaced repetition learning. Memory
+                    tricks optional.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData((current) => ({
+                      ...current,
+                      flashcards: [...current.flashcards, emptyFlashcard()],
+                    }))
+                  }
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm text-foreground hover:bg-accent/10"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Flashcard
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {formData.flashcards.map((card, index) => (
+                  <div
+                    key={`${index}-${card.frontTitle}`}
+                    className="rounded-2xl border border-border bg-card/60 p-4 space-y-3"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <GripVertical className="w-4 h-4 text-muted-foreground" />
+                        Card {index + 1}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeFlashcard(index)}
+                        className="p-2 rounded-lg hover:bg-red-500/10 text-red-500"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <input
+                      type="text"
+                      placeholder="Front side title *"
+                      value={card.frontTitle}
+                      onChange={(event) =>
+                        updateFlashcard(index, "frontTitle", event.target.value)
+                      }
+                      className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
+                    />
+
+                    <textarea
+                      placeholder="Front side description *"
+                      value={card.frontDescription}
+                      onChange={(event) =>
+                        updateFlashcard(
+                          index,
+                          "frontDescription",
+                          event.target.value,
+                        )
+                      }
+                      rows={2}
+                      className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
+                    />
+
+                    <textarea
+                      placeholder="Back side detail explanation *"
+                      value={card.backDetail}
+                      onChange={(event) =>
+                        updateFlashcard(index, "backDetail", event.target.value)
+                      }
+                      rows={3}
+                      className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
+                    />
+
+                    <textarea
+                      placeholder="Memory trick (optional)"
+                      value={card.memoryTrick || ""}
+                      onChange={(event) =>
+                        updateFlashcard(
+                          index,
+                          "memoryTrick",
+                          event.target.value,
+                        )
+                      }
+                      rows={2}
+                      className="w-full px-4 py-2 rounded-lg border border-amber-200 bg-amber-50 text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="space-y-4 border-t-2 border-border pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-display text-lg font-semibold text-foreground">
+                    ❓ Quiz Questions (MCQ)
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Multiple choice questions for knowledge assessment. Answer
+                    must match one option exactly.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData((current) => ({
+                      ...current,
+                      quizQuestions: [
+                        ...current.quizQuestions,
+                        emptyQuizQuestion(),
+                      ],
+                    }))
+                  }
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm text-foreground hover:bg-accent/10"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Question
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {formData.quizQuestions.map((q, index) => (
+                  <div
+                    key={`${index}-${q.question}`}
+                    className="rounded-2xl border border-border bg-card/60 p-4 space-y-3"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <GripVertical className="w-4 h-4 text-muted-foreground" />
+                        Q{index + 1}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeQuizQuestion(index)}
+                        className="p-2 rounded-lg hover:bg-red-500/10 text-red-500"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <textarea
+                      placeholder="Question text *"
+                      value={q.question}
+                      onChange={(event) =>
+                        updateQuizQuestion(
+                          index,
+                          "question",
+                          event.target.value,
+                        )
+                      }
+                      rows={2}
+                      className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
+                    />
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-muted-foreground">
+                        Options (4 options recommended)
+                      </label>
+                      {q.options.map((option, optIdx) => (
+                        <input
+                          key={optIdx}
+                          type="text"
+                          placeholder={`Option ${optIdx + 1} *`}
+                          value={option}
+                          onChange={(e) => {
+                            const newOptions = [...q.options];
+                            newOptions[optIdx] = e.target.value;
+                            updateQuizQuestion(index, "options", newOptions);
+                          }}
+                          className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
+                        />
+                      ))}
+                    </div>
+
+                    <input
+                      type="text"
+                      placeholder="Correct answer *"
+                      value={q.answer}
+                      onChange={(event) =>
+                        updateQuizQuestion(index, "answer", event.target.value)
+                      }
+                      className="w-full px-4 py-2 rounded-lg border border-emerald-200 bg-emerald-50 text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none font-semibold"
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="space-y-4 border-t-2 border-border pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-display text-lg font-semibold text-foreground">
+                    🏛️ Memory Palace
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Mnemonic device entries using the method of loci. Each
+                    becomes a location.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData((current) => ({
+                      ...current,
+                      memoryPalace: [
+                        ...current.memoryPalace,
+                        emptyMemoryPalaceEntry(),
+                      ],
+                    }))
+                  }
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm text-foreground hover:bg-accent/10"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Location
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {formData.memoryPalace.map((entry, index) => (
+                  <div
+                    key={`${index}-${entry.title}`}
+                    className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-start rounded-xl border border-border bg-card/60 p-3"
+                  >
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        placeholder="Location/Step title *"
+                        value={entry.title}
+                        onChange={(event) =>
+                          updateMemoryEntry(index, "title", event.target.value)
+                        }
+                        className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
+                      />
+                      <textarea
+                        placeholder="Memory technique/association for this location"
+                        value={entry.memoryTrick || ""}
+                        onChange={(event) =>
+                          updateMemoryEntry(
+                            index,
+                            "memoryTrick",
+                            event.target.value,
+                          )
+                        }
+                        rows={2}
+                        className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeMemoryEntry(index)}
+                      className="p-2 rounded-lg hover:bg-red-500/10 text-red-500 justify-self-start md:justify-self-center"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="space-y-4 border-t-2 border-border pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-display text-lg font-semibold text-foreground">
@@ -577,19 +1015,26 @@ const AdminContent = () => {
 
               <div className="space-y-3">
                 {formData.quickFacts.map((fact, index) => (
-                  <div key={`${index}-${fact.label}`} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-center rounded-xl border border-border bg-card/60 p-3">
+                  <div
+                    key={`${index}-${fact.label}`}
+                    className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-center rounded-xl border border-border bg-card/60 p-3"
+                  >
                     <input
                       type="text"
                       placeholder="Label"
                       value={fact.label}
-                      onChange={(event) => updateFact(index, "label", event.target.value)}
+                      onChange={(event) =>
+                        updateFact(index, "label", event.target.value)
+                      }
                       className="px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
                     />
                     <input
                       type="text"
                       placeholder="Value"
                       value={fact.value}
-                      onChange={(event) => updateFact(index, "value", event.target.value)}
+                      onChange={(event) =>
+                        updateFact(index, "value", event.target.value)
+                      }
                       className="px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
                     />
                     <button
@@ -622,14 +1067,41 @@ const AdminContent = () => {
                   </div>
                 </div>
                 <div className="rounded-xl bg-card p-3 border border-border">
-                  <div className="text-muted-foreground mb-1">Interactive assets</div>
-                  <div className="font-medium text-foreground">
-                    {formData.steps.filter((step) => step.title && step.detail).length} steps,{" "}
-                    {
-                      formData.quickFacts.filter((fact) => fact.label && fact.value)
-                        .length
-                    }{" "}
-                    facts
+                  <div className="text-muted-foreground mb-1">
+                    Interactive assets
+                  </div>
+                  <div className="font-medium text-foreground text-xs space-y-1">
+                    <div>
+                      📘{" "}
+                      {
+                        formData.steps.filter(
+                          (step) => step.title && step.detail,
+                        ).length
+                      }{" "}
+                      steps
+                    </div>
+                    <div>
+                      📇{" "}
+                      {
+                        formData.flashcards.filter(
+                          (c) => c.frontTitle && c.backDetail,
+                        ).length
+                      }{" "}
+                      cards
+                    </div>
+                    <div>
+                      ❓{" "}
+                      {
+                        formData.quizQuestions.filter(
+                          (q) => q.question && q.answer,
+                        ).length
+                      }{" "}
+                      Q
+                    </div>
+                    <div>
+                      🏛️ {formData.memoryPalace.filter((m) => m.title).length}{" "}
+                      places
+                    </div>
                   </div>
                 </div>
               </div>
@@ -641,7 +1113,11 @@ const AdminContent = () => {
                 disabled={saving}
                 className="px-4 py-2 rounded-lg gradient-accent text-primary-foreground font-semibold hover:opacity-90 disabled:opacity-60"
               >
-                {saving ? "Saving..." : editingId ? "Update Cycle" : "Create Cycle"}
+                {saving
+                  ? "Saving..."
+                  : editingId
+                    ? "Update Cycle"
+                    : "Create Cycle"}
               </button>
               <button
                 type="button"
@@ -680,12 +1156,24 @@ const AdminContent = () => {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left p-4 font-semibold text-foreground">Title</th>
-                <th className="text-left p-4 font-semibold text-foreground">Category</th>
-                <th className="text-left p-4 font-semibold text-foreground">Class Level</th>
-                <th className="text-left p-4 font-semibold text-foreground">Status</th>
-                <th className="text-left p-4 font-semibold text-foreground">Assets</th>
-                <th className="text-left p-4 font-semibold text-foreground">Actions</th>
+                <th className="text-left p-4 font-semibold text-foreground">
+                  Title
+                </th>
+                <th className="text-left p-4 font-semibold text-foreground">
+                  Category
+                </th>
+                <th className="text-left p-4 font-semibold text-foreground">
+                  Class Level
+                </th>
+                <th className="text-left p-4 font-semibold text-foreground">
+                  Status
+                </th>
+                <th className="text-left p-4 font-semibold text-foreground">
+                  Assets
+                </th>
+                <th className="text-left p-4 font-semibold text-foreground">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -696,7 +1184,9 @@ const AdminContent = () => {
                 >
                   <td className="p-4 font-medium text-foreground">
                     <div>{cycle.title}</div>
-                    <div className="text-xs text-muted-foreground mt-1">/{cycle.slug}</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      /{cycle.slug}
+                    </div>
                   </td>
                   <td className="p-4 text-muted-foreground">
                     {cycle.category || "Unknown"}
@@ -707,14 +1197,20 @@ const AdminContent = () => {
                   <td className="p-4">
                     <span
                       className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        statusStyles[cycle.status || "draft"] || statusStyles.draft
+                        statusStyles[cycle.status || "draft"] ||
+                        statusStyles.draft
                       }`}
                     >
                       {cycle.status || "draft"}
                     </span>
                   </td>
                   <td className="p-4 text-muted-foreground">
-                    {cycle.steps.length} steps, {cycle.quickFacts.length} facts
+                    <div className="text-xs space-y-1">
+                      <div>📘 {cycle.steps.length} steps</div>
+                      <div>📇 {cycle.flashcards?.length || 0} cards</div>
+                      <div>❓ {cycle.quizQuestions?.length || 0} Q</div>
+                      <div>🏛️ {cycle.memoryPalace?.length || 0} places</div>
+                    </div>
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">

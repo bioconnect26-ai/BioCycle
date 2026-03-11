@@ -6,6 +6,9 @@ import defineCycleStepModel from "./models/CycleStep.js";
 import defineCategoryModel from "./models/Category.js";
 import defineClassLevelModel from "./models/ClassLevel.js";
 import defineQuickFactModel from "./models/QuickFact.js";
+import defineFlashcardModel from "./models/Flashcard.js";
+import defineQuizQuestionModel from "./models/QuizQuestion.js";
+import defineMemoryPalaceEntryModel from "./models/MemoryPalaceEntry.js";
 import defineActivityLogModel from "./models/ActivityLog.js";
 
 let sequelize;
@@ -41,6 +44,9 @@ const CycleStep = defineCycleStepModel(sequelize);
 const Category = defineCategoryModel(sequelize);
 const ClassLevel = defineClassLevelModel(sequelize);
 const QuickFact = defineQuickFactModel(sequelize);
+const Flashcard = defineFlashcardModel(sequelize);
+const QuizQuestion = defineQuizQuestionModel(sequelize);
+const MemoryPalaceEntry = defineMemoryPalaceEntryModel(sequelize);
 const ActivityLog = defineActivityLogModel(sequelize);
 
 // Setup Relationships
@@ -61,6 +67,15 @@ CycleStep.belongsTo(Cycle, { foreignKey: "cycleId" });
 Cycle.hasMany(QuickFact, { foreignKey: "cycleId", as: "quickFacts" });
 QuickFact.belongsTo(Cycle, { foreignKey: "cycleId" });
 
+Cycle.hasMany(Flashcard, { foreignKey: "cycleId", as: "flashcards" });
+Flashcard.belongsTo(Cycle, { foreignKey: "cycleId" });
+
+Cycle.hasMany(QuizQuestion, { foreignKey: "cycleId", as: "quizQuestions" });
+QuizQuestion.belongsTo(Cycle, { foreignKey: "cycleId" });
+
+Cycle.hasMany(MemoryPalaceEntry, { foreignKey: "cycleId", as: "memoryPalace" });
+MemoryPalaceEntry.belongsTo(Cycle, { foreignKey: "cycleId" });
+
 User.hasMany(ActivityLog, { foreignKey: "userId", as: "activities" });
 ActivityLog.belongsTo(User, { foreignKey: "userId" });
 
@@ -72,5 +87,8 @@ export {
   Category,
   ClassLevel,
   QuickFact,
+  Flashcard,
+  QuizQuestion,
+  MemoryPalaceEntry,
   ActivityLog,
 };

@@ -1,6 +1,9 @@
 import {
   Cycle,
   CycleStep,
+  Flashcard,
+  QuizQuestion,
+  MemoryPalaceEntry,
   QuickFact,
   Category,
   ClassLevel,
@@ -59,6 +62,24 @@ export const getAllCycles = async (req, res) => {
           order: [["stepOrder", "ASC"]],
         },
         {
+          model: Flashcard,
+          as: "flashcards",
+          separate: true,
+          order: [["position", "ASC"]],
+        },
+        {
+          model: QuizQuestion,
+          as: "quizQuestions",
+          separate: true,
+          order: [["position", "ASC"]],
+        },
+        {
+          model: MemoryPalaceEntry,
+          as: "memoryPalace",
+          separate: true,
+          order: [["position", "ASC"]],
+        },
+        {
           model: QuickFact,
           as: "quickFacts",
           separate: true,
@@ -99,6 +120,17 @@ export const getCycleBySlug = async (req, res) => {
         { model: User, as: "creator", attributes: { exclude: ["password"] } },
         { model: User, as: "updater", attributes: { exclude: ["password"] } },
         { model: CycleStep, as: "steps", order: [["stepOrder", "ASC"]] },
+        { model: Flashcard, as: "flashcards", order: [["position", "ASC"]] },
+        {
+          model: QuizQuestion,
+          as: "quizQuestions",
+          order: [["position", "ASC"]],
+        },
+        {
+          model: MemoryPalaceEntry,
+          as: "memoryPalace",
+          order: [["position", "ASC"]],
+        },
         { model: QuickFact, as: "quickFacts", order: [["position", "ASC"]] },
       ],
     });
@@ -149,6 +181,17 @@ export const getCycleById = async (req, res) => {
         { model: User, as: "creator", attributes: { exclude: ["password"] } },
         { model: User, as: "updater", attributes: { exclude: ["password"] } },
         { model: CycleStep, as: "steps", order: [["stepOrder", "ASC"]] },
+        { model: Flashcard, as: "flashcards", order: [["position", "ASC"]] },
+        {
+          model: QuizQuestion,
+          as: "quizQuestions",
+          order: [["position", "ASC"]],
+        },
+        {
+          model: MemoryPalaceEntry,
+          as: "memoryPalace",
+          order: [["position", "ASC"]],
+        },
         { model: QuickFact, as: "quickFacts", order: [["position", "ASC"]] },
       ],
     });
@@ -188,6 +231,9 @@ export const createCycle = async (req, res) => {
       icon,
       color,
       steps,
+      flashcards,
+      quizQuestions,
+      memoryPalace,
       quickFacts,
     } = req.body;
 
@@ -226,7 +272,7 @@ export const createCycle = async (req, res) => {
       publishedAt: new Date(),
     });
 
-    // Add steps
+    // Add steps (journey)
     if (steps && Array.isArray(steps)) {
       const stepData = steps.map((step, index) => ({
         cycleId: cycle.id,
@@ -237,6 +283,42 @@ export const createCycle = async (req, res) => {
         memoryTrick: step.memoryTrick,
       }));
       await CycleStep.bulkCreate(stepData);
+    }
+
+    // Add flashcards
+    if (flashcards && Array.isArray(flashcards)) {
+      const cardData = flashcards.map((card, index) => ({
+        cycleId: cycle.id,
+        position: index + 1,
+        frontTitle: card.frontTitle,
+        frontDescription: card.frontDescription,
+        backDetail: card.backDetail,
+        memoryTrick: card.memoryTrick,
+      }));
+      await Flashcard.bulkCreate(cardData);
+    }
+
+    // Add quiz questions
+    if (quizQuestions && Array.isArray(quizQuestions)) {
+      const quizData = quizQuestions.map((q, index) => ({
+        cycleId: cycle.id,
+        position: index + 1,
+        question: q.question,
+        options: q.options || [],
+        answer: q.answer,
+      }));
+      await QuizQuestion.bulkCreate(quizData);
+    }
+
+    // Add memory palace entries
+    if (memoryPalace && Array.isArray(memoryPalace)) {
+      const memData = memoryPalace.map((m, index) => ({
+        cycleId: cycle.id,
+        position: index + 1,
+        title: m.title,
+        memoryTrick: m.memoryTrick,
+      }));
+      await MemoryPalaceEntry.bulkCreate(memData);
     }
 
     // Add quick facts
@@ -264,6 +346,9 @@ export const createCycle = async (req, res) => {
         { model: Category, as: "category" },
         { model: ClassLevel, as: "classLevel" },
         { model: CycleStep, as: "steps" },
+        { model: Flashcard, as: "flashcards" },
+        { model: QuizQuestion, as: "quizQuestions" },
+        { model: MemoryPalaceEntry, as: "memoryPalace" },
         { model: QuickFact, as: "quickFacts" },
       ],
     });
@@ -298,6 +383,9 @@ export const updateCycle = async (req, res) => {
       icon,
       color,
       steps,
+      flashcards,
+      quizQuestions,
+      memoryPalace,
       quickFacts,
     } = req.body;
 
@@ -347,7 +435,7 @@ export const updateCycle = async (req, res) => {
       status: "draft", // Reset to draft when edited
     });
 
-    // Update steps if provided
+    // Update steps if provided (journey)
     if (steps && Array.isArray(steps)) {
       await CycleStep.destroy({ where: { cycleId: id } });
       const stepData = steps.map((step, index) => ({
@@ -359,6 +447,45 @@ export const updateCycle = async (req, res) => {
         memoryTrick: step.memoryTrick,
       }));
       await CycleStep.bulkCreate(stepData);
+    }
+
+    // Update flashcards
+    if (flashcards && Array.isArray(flashcards)) {
+      await Flashcard.destroy({ where: { cycleId: id } });
+      const cardData = flashcards.map((card, index) => ({
+        cycleId: cycle.id,
+        position: index + 1,
+        frontTitle: card.frontTitle,
+        frontDescription: card.frontDescription,
+        backDetail: card.backDetail,
+        memoryTrick: card.memoryTrick,
+      }));
+      await Flashcard.bulkCreate(cardData);
+    }
+
+    // Update quiz questions
+    if (quizQuestions && Array.isArray(quizQuestions)) {
+      await QuizQuestion.destroy({ where: { cycleId: id } });
+      const quizData = quizQuestions.map((q, index) => ({
+        cycleId: cycle.id,
+        position: index + 1,
+        question: q.question,
+        options: q.options || [],
+        answer: q.answer,
+      }));
+      await QuizQuestion.bulkCreate(quizData);
+    }
+
+    // Update memory palace entries
+    if (memoryPalace && Array.isArray(memoryPalace)) {
+      await MemoryPalaceEntry.destroy({ where: { cycleId: id } });
+      const memData = memoryPalace.map((m, index) => ({
+        cycleId: cycle.id,
+        position: index + 1,
+        title: m.title,
+        memoryTrick: m.memoryTrick,
+      }));
+      await MemoryPalaceEntry.bulkCreate(memData);
     }
 
     // Update quick facts if provided
@@ -386,6 +513,9 @@ export const updateCycle = async (req, res) => {
       include: [
         { model: Category, as: "category" },
         { model: CycleStep, as: "steps" },
+        { model: Flashcard, as: "flashcards" },
+        { model: QuizQuestion, as: "quizQuestions" },
+        { model: MemoryPalaceEntry, as: "memoryPalace" },
         { model: QuickFact, as: "quickFacts" },
       ],
     });
@@ -476,6 +606,9 @@ export const deleteCycle = async (req, res) => {
     });
 
     await CycleStep.destroy({ where: { cycleId: id } });
+    await Flashcard.destroy({ where: { cycleId: id } });
+    await QuizQuestion.destroy({ where: { cycleId: id } });
+    await MemoryPalaceEntry.destroy({ where: { cycleId: id } });
     await QuickFact.destroy({ where: { cycleId: id } });
     await cycle.destroy();
 

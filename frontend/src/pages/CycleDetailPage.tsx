@@ -300,40 +300,27 @@ function Flashcard({
    QUIZ
 ══════════════════════════════════════════ */
 function QuickQuiz({
-  steps,
+  questions,
 }: {
-  steps: { title: string; description: string }[];
+  questions?: Array<{
+    question: string;
+    options: string[];
+    answer: string;
+  }>;
 }) {
   const [qIdx, setQIdx] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [score, setScore] = useState(0);
   const [done, setDone] = useState(false);
 
-  const questions = useMemo(
-    () =>
-      steps.map((step, i) => {
-        const wrong = steps
-          .filter((_, j) => j !== i)
-          .sort(() => Math.random() - 0.5)
-          .slice(0, 3)
-          .map((s) => s.title);
-        return {
-          question: step.description,
-          answer: step.title,
-          options: [...wrong, step.title].sort(() => Math.random() - 0.5),
-        };
-      }),
-    [steps],
-  );
-
   useEffect(() => {
     setQIdx(0);
     setSelected(null);
     setScore(0);
     setDone(false);
-  }, [questions.length]);
+  }, [questions?.length]);
 
-  if (!questions.length) {
+  if (!questions || !questions.length) {
     return (
       <div
         className="rounded-2xl p-8 text-center"
@@ -343,10 +330,10 @@ function QuickQuiz({
           className="font-display text-lg font-semibold"
           style={{ color: T.text }}
         >
-          Quiz unlocks when steps are added
+          Quiz unlocks when questions are added
         </p>
         <p className="text-sm mt-2" style={{ color: T.textSoft }}>
-          Add step descriptions in admin to generate practice questions here.
+          Add quiz questions in admin to enable knowledge assessment.
         </p>
       </div>
     );
@@ -532,9 +519,12 @@ function QuickQuiz({
    MEMORY PALACE
 ══════════════════════════════════ */
 function MemoryPalace({
-  steps,
+  entries,
 }: {
-  steps: { title: string; memoryTrick?: string }[];
+  entries?: Array<{
+    title: string;
+    memoryTrick?: string;
+  }>;
 }) {
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
   const toggle = (i: number) =>
@@ -543,9 +533,8 @@ function MemoryPalace({
       n.has(i) ? n.delete(i) : n.add(i);
       return n;
     });
-  const acronym = steps.map((s) => s.title[0]).join("");
 
-  if (!steps.length) {
+  if (!entries || !entries.length) {
     return (
       <div
         className="rounded-2xl p-8 text-center"
@@ -555,10 +544,10 @@ function MemoryPalace({
           className="font-display text-lg font-semibold"
           style={{ color: T.text }}
         >
-          Memory tools appear after steps are added
+          Memory Palace unlocks when entries are added
         </p>
         <p className="text-sm mt-2" style={{ color: T.textSoft }}>
-          Add step titles and memory tricks in admin to build this section.
+          Add memory palace locations in admin to enable the method of loci.
         </p>
       </div>
     );
@@ -566,7 +555,7 @@ function MemoryPalace({
 
   return (
     <div>
-      {/* Acronym banner */}
+      {/* Info banner */}
       <div
         className="rounded-2xl p-5 mb-6 text-center"
         style={{
@@ -576,41 +565,18 @@ function MemoryPalace({
         }}
       >
         <p
-          className="text-xs font-mono uppercase tracking-widest mb-3"
+          className="text-xs font-mono uppercase tracking-widest mb-2"
           style={{ color: T.textXSoft }}
         >
-          Memory Acronym — first letter of each step
+          🏛️ Method of Loci — visualize each location
         </p>
-        <div className="flex items-end justify-center gap-3 flex-wrap">
-          {acronym.split("").map((letter, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06 }}
-              className="flex flex-col items-center gap-1"
-            >
-              <span
-                className="text-2xl font-display font-black leading-none"
-                style={{
-                  color: `hsl(${160 + (i / acronym.length) * 60}, 65%, 38%)`,
-                }}
-              >
-                {letter}
-              </span>
-              <span
-                className="text-[9px] font-mono uppercase tracking-wide"
-                style={{ color: T.textXSoft }}
-              >
-                {steps[i]?.title.slice(0, 5)}
-              </span>
-            </motion.div>
-          ))}
-        </div>
+        <p className="text-sm" style={{ color: T.textMid }}>
+          {entries.length} locations to anchor your memory
+        </p>
       </div>
 
       <div className="grid gap-2.5">
-        {steps.map((step, i) => (
+        {entries.map((entry, i) => (
           <motion.button
             key={i}
             onClick={() => toggle(i)}
@@ -636,7 +602,7 @@ function MemoryPalace({
                   className="text-sm font-semibold"
                   style={{ color: T.text }}
                 >
-                  {step.title}
+                  {entry.title}
                 </span>
               </div>
               <Lightbulb
@@ -653,8 +619,8 @@ function MemoryPalace({
                   className="text-xs leading-relaxed pl-9"
                   style={{ color: "#92400e" }}
                 >
-                  {step.memoryTrick ||
-                    `Remember "${step.title}" as the key action that advances the cycle — step ${i + 1} in the sequence.`}
+                  {entry.memoryTrick ||
+                    `Remember "${entry.title}" as location ${i + 1} in your memory palace.`}
                 </motion.p>
               )}
             </AnimatePresence>
@@ -1364,17 +1330,190 @@ const CycleDetailPage = () => {
                       Flip to Remember
                     </h2>
                     <p className="text-sm" style={{ color: T.textSoft }}>
-                      Active recall — tap the card to reveal the deep
-                      explanation
+                      Active recall — tap the card to reveal the explanation
                     </p>
                   </div>
-                  {hasSteps ? (
-                    <Flashcard
-                      key={flashcardIdx}
-                      step={cycle.steps[flashcardIdx]}
-                      index={flashcardIdx}
-                      total={cycle.steps.length}
-                    />
+                  {cycle.flashcards && cycle.flashcards.length > 0 ? (
+                    <div>
+                      <div
+                        className="relative mx-auto cursor-pointer"
+                        style={{
+                          width: "100%",
+                          maxWidth: 520,
+                          height: 260,
+                          perspective: 900,
+                        }}
+                        onClick={() =>
+                          setFlashcardIdx((state) => (!state ? 0 : state))
+                        }
+                      >
+                        <motion.div
+                          className="relative w-full h-full"
+                          animate={{
+                            rotateY: flashcardIdx % 2 === 0 ? 0 : 180,
+                          }}
+                          transition={{
+                            duration: 0.55,
+                            ease: [0.4, 0, 0.2, 1],
+                          }}
+                          style={{ transformStyle: "preserve-3d" }}
+                        >
+                          {/* Front */}
+                          <div
+                            className="absolute inset-0 rounded-2xl p-6 flex flex-col justify-between"
+                            style={{
+                              backfaceVisibility: "hidden",
+                              WebkitBackfaceVisibility: "hidden",
+                              background: T.surface,
+                              border: `1.5px solid ${T.border}`,
+                              boxShadow: T.shadowMd,
+                            }}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span
+                                className="text-xs font-mono tracking-widest uppercase"
+                                style={{ color: T.textXSoft }}
+                              >
+                                Card {flashcardIdx + 1} of{" "}
+                                {cycle.flashcards.length}
+                              </span>
+                              <span
+                                className="text-xs flex items-center gap-1"
+                                style={{ color: T.textXSoft }}
+                              >
+                                <Eye className="w-3 h-3" /> Tap to flip
+                              </span>
+                            </div>
+                            <div className="text-center px-2">
+                              <h3
+                                className="font-display text-xl font-bold mb-2"
+                                style={{ color: T.text }}
+                              >
+                                {cycle.flashcards[flashcardIdx]?.frontTitle}
+                              </h3>
+                              <p
+                                className="text-sm leading-relaxed"
+                                style={{ color: T.textMid }}
+                              >
+                                {
+                                  cycle.flashcards[flashcardIdx]
+                                    ?.frontDescription
+                                }
+                              </p>
+                            </div>
+                            <div className="flex justify-center gap-1">
+                              {Array.from({
+                                length: cycle.flashcards.length,
+                              }).map((_, i) => (
+                                <div
+                                  key={i}
+                                  className="h-1.5 rounded-full transition-all duration-300"
+                                  style={{
+                                    width: i === flashcardIdx ? 20 : 6,
+                                    background:
+                                      i === flashcardIdx ? T.emerald : T.border,
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Back */}
+                          <div
+                            className="absolute inset-0 rounded-2xl p-6 flex flex-col justify-between"
+                            style={{
+                              backfaceVisibility: "hidden",
+                              WebkitBackfaceVisibility: "hidden",
+                              transform: "rotateY(180deg)",
+                              background: T.gradCard,
+                              border: `1.5px solid ${T.borderStrong}`,
+                              boxShadow: T.shadowMd,
+                            }}
+                          >
+                            <span
+                              className="text-xs font-mono tracking-widest uppercase"
+                              style={{ color: T.emerald }}
+                            >
+                              Deep Dive ✦
+                            </span>
+                            <p
+                              className="text-sm leading-relaxed"
+                              style={{ color: T.textMid }}
+                            >
+                              {cycle.flashcards[flashcardIdx]?.backDetail}
+                            </p>
+                            {cycle.flashcards[flashcardIdx]?.memoryTrick && (
+                              <div
+                                className="flex items-start gap-2 rounded-xl px-3 py-2"
+                                style={{
+                                  background: T.goldLight,
+                                  border: "1px solid #fcd34d",
+                                }}
+                              >
+                                <Lightbulb
+                                  className="w-4 h-4 flex-shrink-0 mt-0.5"
+                                  style={{ color: T.gold }}
+                                />
+                                <p
+                                  className="text-xs leading-relaxed"
+                                  style={{ color: "#92400e" }}
+                                >
+                                  {cycle.flashcards[flashcardIdx]?.memoryTrick}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      </div>
+
+                      {/* Navigation */}
+                      <div className="flex items-center justify-center gap-4 mt-8">
+                        <button
+                          onClick={() =>
+                            setFlashcardIdx((i) => Math.max(0, i - 1))
+                          }
+                          disabled={flashcardIdx === 0}
+                          className="w-10 h-10 rounded-full flex items-center justify-center transition-all disabled:opacity-30 hover:scale-110"
+                          style={{
+                            background: T.surface,
+                            border: `1.5px solid ${T.border}`,
+                            boxShadow: T.shadow,
+                          }}
+                        >
+                          <ChevronLeft
+                            className="w-5 h-5"
+                            style={{ color: T.textMid }}
+                          />
+                        </button>
+                        <span
+                          className="text-xs font-mono"
+                          style={{ color: T.textXSoft }}
+                        >
+                          {flashcardIdx + 1} / {cycle.flashcards.length}
+                        </span>
+                        <button
+                          onClick={() =>
+                            setFlashcardIdx((i) =>
+                              Math.min(cycle.flashcards.length - 1, i + 1),
+                            )
+                          }
+                          disabled={
+                            flashcardIdx === cycle.flashcards.length - 1
+                          }
+                          className="w-10 h-10 rounded-full flex items-center justify-center transition-all disabled:opacity-30 hover:scale-110"
+                          style={{
+                            background: T.surface,
+                            border: `1.5px solid ${T.border}`,
+                            boxShadow: T.shadow,
+                          }}
+                        >
+                          <ChevronRight
+                            className="w-5 h-5"
+                            style={{ color: T.textMid }}
+                          />
+                        </button>
+                      </div>
+                    </div>
                   ) : (
                     <div
                       className="rounded-2xl p-8 text-center"
@@ -1390,56 +1529,11 @@ const CycleDetailPage = () => {
                         Flashcards will appear here
                       </p>
                       <p className="text-sm mt-2" style={{ color: T.textSoft }}>
-                        Add steps in admin to generate flip cards automatically.
+                        Add flashcards in admin to enable spaced repetition
+                        learning.
                       </p>
                     </div>
                   )}
-                  <div className="flex items-center justify-center gap-4 mt-8">
-                    <button
-                      onClick={() => setFlashcardIdx((i) => Math.max(0, i - 1))}
-                      disabled={!hasSteps || flashcardIdx === 0}
-                      className="w-10 h-10 rounded-full flex items-center justify-center transition-all disabled:opacity-30 hover:scale-110"
-                      style={{
-                        background: T.surface,
-                        border: `1.5px solid ${T.border}`,
-                        boxShadow: T.shadow,
-                      }}
-                    >
-                      <ChevronLeft
-                        className="w-5 h-5"
-                        style={{ color: T.textMid }}
-                      />
-                    </button>
-                    <span
-                      className="text-sm font-mono"
-                      style={{ color: T.textXSoft }}
-                    >
-                      {hasSteps
-                        ? `${flashcardIdx + 1} / ${cycle.steps.length}`
-                        : "0 / 0"}
-                    </span>
-                    <button
-                      onClick={() =>
-                        setFlashcardIdx((i) =>
-                          Math.min(cycle.steps.length - 1, i + 1),
-                        )
-                      }
-                      disabled={
-                        !hasSteps || flashcardIdx === cycle.steps.length - 1
-                      }
-                      className="w-10 h-10 rounded-full flex items-center justify-center transition-all disabled:opacity-30 hover:scale-110"
-                      style={{
-                        background: T.surface,
-                        border: `1.5px solid ${T.border}`,
-                        boxShadow: T.shadow,
-                      }}
-                    >
-                      <ChevronRight
-                        className="w-5 h-5"
-                        style={{ color: T.textMid }}
-                      />
-                    </button>
-                  </div>
                 </div>
               )}
 
@@ -1454,10 +1548,10 @@ const CycleDetailPage = () => {
                       Test Yourself
                     </h2>
                     <p className="text-sm" style={{ color: T.textSoft }}>
-                      Match each description to the correct step
+                      Answer questions to assess your knowledge
                     </p>
                   </div>
-                  <QuickQuiz steps={cycle.steps} />
+                  <QuickQuiz questions={cycle.quizQuestions} />
                 </div>
               )}
 
@@ -1472,11 +1566,11 @@ const CycleDetailPage = () => {
                       Memory Palace
                     </h2>
                     <p className="text-sm" style={{ color: T.textSoft }}>
-                      Mnemonics and visual anchors to lock every step into
-                      memory
+                      Use the method of loci to memorize locations and
+                      associations
                     </p>
                   </div>
-                  <MemoryPalace steps={cycle.steps} />
+                  <MemoryPalace entries={cycle.memoryPalace} />
                 </div>
               )}
             </motion.div>

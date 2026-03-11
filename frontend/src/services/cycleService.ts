@@ -19,6 +19,27 @@ export interface CycleStep {
   memoryTrick?: string;
 }
 
+export interface Flashcard {
+  id?: string;
+  frontTitle: string;
+  frontDescription: string;
+  backDetail: string;
+  memoryTrick?: string;
+}
+
+export interface QuizQuestion {
+  id?: string;
+  question: string;
+  options: string[];
+  answer: string;
+}
+
+export interface MemoryPalaceEntry {
+  id?: string;
+  title: string;
+  memoryTrick?: string;
+}
+
 export interface QuickFact {
   id?: string;
   label: string;
@@ -60,6 +81,9 @@ export interface CycleData {
   updatedAt?: string;
   creator?: any;
   updater?: any;
+  flashcards: Flashcard[];
+  quizQuestions: QuizQuestion[];
+  memoryPalace: MemoryPalaceEntry[];
 }
 
 const iconMap: Record<string, ElementType> = {
@@ -93,8 +117,21 @@ const normalizeCycle = (rawCycle: any): CycleData => {
     icon: resolveIcon(cycle?.icon),
     color: cycle?.color || undefined,
     steps: Array.isArray(cycle?.steps)
-      ? [...cycle.steps].sort(
-          (a, b) => (a.stepOrder || 0) - (b.stepOrder || 0),
+      ? [...cycle.steps].sort((a, b) => (a.stepOrder || 0) - (b.stepOrder || 0))
+      : [],
+    flashcards: Array.isArray(cycle?.flashcards)
+      ? [...cycle.flashcards].sort(
+          (a, b) => (a.position || 0) - (b.position || 0),
+        )
+      : [],
+    quizQuestions: Array.isArray(cycle?.quizQuestions)
+      ? [...cycle.quizQuestions].sort(
+          (a, b) => (a.position || 0) - (b.position || 0),
+        )
+      : [],
+    memoryPalace: Array.isArray(cycle?.memoryPalace)
+      ? [...cycle.memoryPalace].sort(
+          (a, b) => (a.position || 0) - (b.position || 0),
         )
       : [],
     quickFacts: Array.isArray(cycle?.quickFacts)
