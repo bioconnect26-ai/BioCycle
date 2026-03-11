@@ -1,12 +1,19 @@
-import { motion, useScroll, useTransform, useSpring, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useSpring,
+  AnimatePresence,
+} from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, BookOpen, Users, Eye, FlaskConical } from "lucide-react";
 import FloatingParticles from "@/components/FloatingParticles";
 import PublicNavbar from "@/components/PublicNavbar";
 import heroBg from "@/assets/hero-bg.jpg";
-import { cyclesData } from "@/data/cycles";
+import { cyclesData } from "@/data/cycles"; // kept for fallback styling
 import CycleCard from "@/components/CycleCard";
 import { useEffect, useRef, useState } from "react";
+import { cycleService, CycleData } from "@/services/cycleService";
 
 /* ─── Typing animation hook ─── */
 function useTypingEffect(words: string[], speed = 80, pause = 1800) {
@@ -17,21 +24,24 @@ function useTypingEffect(words: string[], speed = 80, pause = 1800) {
 
   useEffect(() => {
     const current = words[wordIdx];
-    const timeout = setTimeout(() => {
-      if (!deleting) {
-        setDisplayed(current.slice(0, charIdx + 1));
-        if (charIdx + 1 === current.length) {
-          setTimeout(() => setDeleting(true), pause);
-        } else setCharIdx((c) => c + 1);
-      } else {
-        setDisplayed(current.slice(0, charIdx - 1));
-        if (charIdx - 1 === 0) {
-          setDeleting(false);
-          setWordIdx((w) => (w + 1) % words.length);
-          setCharIdx(0);
-        } else setCharIdx((c) => c - 1);
-      }
-    }, deleting ? speed / 2 : speed);
+    const timeout = setTimeout(
+      () => {
+        if (!deleting) {
+          setDisplayed(current.slice(0, charIdx + 1));
+          if (charIdx + 1 === current.length) {
+            setTimeout(() => setDeleting(true), pause);
+          } else setCharIdx((c) => c + 1);
+        } else {
+          setDisplayed(current.slice(0, charIdx - 1));
+          if (charIdx - 1 === 0) {
+            setDeleting(false);
+            setWordIdx((w) => (w + 1) % words.length);
+            setCharIdx(0);
+          } else setCharIdx((c) => c - 1);
+        }
+      },
+      deleting ? speed / 2 : speed,
+    );
     return () => clearTimeout(timeout);
   }, [charIdx, deleting, wordIdx, words, speed, pause]);
 
@@ -74,14 +84,21 @@ function DNAHelix() {
         for (let i = 0; i < NODES; i++) {
           const y = i * spacing;
           const phase = strand === 0 ? 0 : Math.PI;
-          const x = cx + Math.sin((i / NODES) * Math.PI * 3 + t + phase) * amplitude;
+          const x =
+            cx + Math.sin((i / NODES) * Math.PI * 3 + t + phase) * amplitude;
           if (i === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
         const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
         grad.addColorStop(0, "rgba(52,211,153,0)");
-        grad.addColorStop(0.2, strand === 0 ? "rgba(52,211,153,0.6)" : "rgba(6,182,212,0.6)");
-        grad.addColorStop(0.8, strand === 0 ? "rgba(52,211,153,0.6)" : "rgba(6,182,212,0.6)");
+        grad.addColorStop(
+          0.2,
+          strand === 0 ? "rgba(52,211,153,0.6)" : "rgba(6,182,212,0.6)",
+        );
+        grad.addColorStop(
+          0.8,
+          strand === 0 ? "rgba(52,211,153,0.6)" : "rgba(6,182,212,0.6)",
+        );
         grad.addColorStop(1, "rgba(52,211,153,0)");
         ctx.strokeStyle = grad;
         ctx.lineWidth = 2;
@@ -92,9 +109,11 @@ function DNAHelix() {
       for (let i = 0; i < NODES; i++) {
         const y = i * spacing;
         const x1 = cx + Math.sin((i / NODES) * Math.PI * 3 + t) * amplitude;
-        const x2 = cx + Math.sin((i / NODES) * Math.PI * 3 + t + Math.PI) * amplitude;
+        const x2 =
+          cx + Math.sin((i / NODES) * Math.PI * 3 + t + Math.PI) * amplitude;
 
-        const alpha = 0.3 + 0.5 * Math.abs(Math.sin((i / NODES) * Math.PI * 3 + t));
+        const alpha =
+          0.3 + 0.5 * Math.abs(Math.sin((i / NODES) * Math.PI * 3 + t));
 
         // Rung line
         ctx.beginPath();
@@ -106,10 +125,17 @@ function DNAHelix() {
 
         // Node dots
         const [c1, c2] = pairs[i % 2];
-        [{ x: x1, c: c1 }, { x: x2, c: c2 }].forEach(({ x, c }) => {
+        [
+          { x: x1, c: c1 },
+          { x: x2, c: c2 },
+        ].forEach(({ x, c }) => {
           ctx.beginPath();
           ctx.arc(x, y, 4, 0, Math.PI * 2);
-          ctx.fillStyle = c + Math.round(alpha * 255).toString(16).padStart(2, "0");
+          ctx.fillStyle =
+            c +
+            Math.round(alpha * 255)
+              .toString(16)
+              .padStart(2, "0");
           ctx.fill();
 
           // Glow
@@ -203,11 +229,13 @@ function WaveTransition() {
           d="M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z"
           fill="hsl(var(--background))"
           fillOpacity="0.4"
-          animate={{ d: [
-            "M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z",
-            "M0,40 C240,20 480,80 720,40 C960,20 1200,80 1440,40 L1440,120 L0,120 Z",
-            "M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z",
-          ]}}
+          animate={{
+            d: [
+              "M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z",
+              "M0,40 C240,20 480,80 720,40 C960,20 1200,80 1440,40 L1440,120 L0,120 Z",
+              "M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z",
+            ],
+          }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
         {/* Mid wave */}
@@ -215,23 +243,37 @@ function WaveTransition() {
           d="M0,80 C360,40 720,100 1080,60 C1260,40 1380,70 1440,80 L1440,120 L0,120 Z"
           fill="hsl(var(--background))"
           fillOpacity="0.6"
-          animate={{ d: [
-            "M0,80 C360,40 720,100 1080,60 C1260,40 1380,70 1440,80 L1440,120 L0,120 Z",
-            "M0,55 C360,90 720,40 1080,80 C1260,95 1380,50 1440,55 L1440,120 L0,120 Z",
-            "M0,80 C360,40 720,100 1080,60 C1260,40 1380,70 1440,80 L1440,120 L0,120 Z",
-          ]}}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+          animate={{
+            d: [
+              "M0,80 C360,40 720,100 1080,60 C1260,40 1380,70 1440,80 L1440,120 L0,120 Z",
+              "M0,55 C360,90 720,40 1080,80 C1260,95 1380,50 1440,55 L1440,120 L0,120 Z",
+              "M0,80 C360,40 720,100 1080,60 C1260,40 1380,70 1440,80 L1440,120 L0,120 Z",
+            ],
+          }}
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 0.5,
+          }}
         />
         {/* Front wave — solid background fill */}
         <motion.path
           d="M0,90 C180,70 360,110 540,90 C720,70 900,110 1080,90 C1260,70 1380,95 1440,90 L1440,120 L0,120 Z"
           fill="hsl(var(--background))"
-          animate={{ d: [
-            "M0,90 C180,70 360,110 540,90 C720,70 900,110 1080,90 C1260,70 1380,95 1440,90 L1440,120 L0,120 Z",
-            "M0,100 C180,110 360,80 540,100 C720,110 900,80 1080,100 C1260,110 1380,85 1440,100 L1440,120 L0,120 Z",
-            "M0,90 C180,70 360,110 540,90 C720,70 900,110 1080,90 C1260,70 1380,95 1440,90 L1440,120 L0,120 Z",
-          ]}}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          animate={{
+            d: [
+              "M0,90 C180,70 360,110 540,90 C720,70 900,110 1080,90 C1260,70 1380,95 1440,90 L1440,120 L0,120 Z",
+              "M0,100 C180,110 360,80 540,100 C720,110 900,80 1080,100 C1260,110 1380,85 1440,100 L1440,120 L0,120 Z",
+              "M0,90 C180,70 360,110 540,90 C720,70 900,110 1080,90 C1260,70 1380,95 1440,90 L1440,120 L0,120 Z",
+            ],
+          }}
+          transition={{
+            duration: 5,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1,
+          }}
         />
       </svg>
     </div>
@@ -255,13 +297,17 @@ function CursorGlow() {
   }, []);
 
   return (
-    <div ref={heroRef} className="absolute inset-0 pointer-events-none overflow-hidden">
+    <div
+      ref={heroRef}
+      className="absolute inset-0 pointer-events-none overflow-hidden"
+    >
       <div
         className="absolute w-[400px] h-[400px] rounded-full pointer-events-none transition-all duration-150"
         style={{
           left: pos.x - 200,
           top: pos.y - 200,
-          background: "radial-gradient(circle, rgba(52,211,153,0.08) 0%, transparent 70%)",
+          background:
+            "radial-gradient(circle, rgba(52,211,153,0.08) 0%, transparent 70%)",
         }}
       />
     </div>
@@ -281,11 +327,22 @@ const fadeUp = {
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.1, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] as const },
+    transition: {
+      delay: i * 0.1,
+      duration: 0.6,
+      ease: [0.25, 0.46, 0.45, 0.94] as const,
+    },
   }),
 };
 
-const cycleWords = ["Krebs Cycle", "Cell Division", "Photosynthesis", "DNA Replication", "Mitosis", "Meiosis"];
+const cycleWords = [
+  "Krebs Cycle",
+  "Cell Division",
+  "Photosynthesis",
+  "DNA Replication",
+  "Mitosis",
+  "Meiosis",
+];
 
 /* ════════════════════════════════════════════ */
 const Index = () => {
@@ -293,9 +350,30 @@ const Index = () => {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 0.3], [1, 0.92]);
   const heroY = useTransform(scrollYProgress, [0, 0.3], [0, 80]);
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+  });
 
   const typedWord = useTypingEffect(cycleWords, 75, 1600);
+
+  const [featured, setFeatured] = useState<CycleData[]>([]);
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoadingFeatured(true);
+        const res = await cycleService.getAllCycles(1, 6);
+        setFeatured(res.data || res);
+      } catch (err) {
+        console.error("Error loading featured cycles", err);
+      } finally {
+        setLoadingFeatured(false);
+      }
+    };
+    load();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -306,7 +384,8 @@ const Index = () => {
         className="fixed top-0 left-0 right-0 h-[2px] z-[999] origin-left"
         style={{
           scaleX: smoothProgress,
-          background: "linear-gradient(90deg, hsl(var(--emerald)), hsl(var(--cyan)), hsl(var(--emerald)))",
+          background:
+            "linear-gradient(90deg, hsl(var(--emerald)), hsl(var(--cyan)), hsl(var(--emerald)))",
         }}
       />
 
@@ -349,19 +428,37 @@ const Index = () => {
         {/* Ambient color orbs */}
         <motion.div
           className="absolute rounded-full blur-[130px] pointer-events-none"
-          style={{ width: 600, height: 600, background: "rgba(52,211,153,0.12)", top: "-10%", left: "-5%" }}
+          style={{
+            width: 600,
+            height: 600,
+            background: "rgba(52,211,153,0.12)",
+            top: "-10%",
+            left: "-5%",
+          }}
           animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.1, 1] }}
           transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
           className="absolute rounded-full blur-[100px] pointer-events-none"
-          style={{ width: 500, height: 500, background: "rgba(6,182,212,0.10)", bottom: "5%", right: "-5%" }}
+          style={{
+            width: 500,
+            height: 500,
+            background: "rgba(6,182,212,0.10)",
+            bottom: "5%",
+            right: "-5%",
+          }}
           animate={{ x: [0, -30, 0], y: [0, 25, 0], scale: [1, 1.15, 1] }}
           transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
           className="absolute rounded-full blur-[80px] pointer-events-none"
-          style={{ width: 300, height: 300, background: "rgba(16,185,129,0.08)", top: "40%", left: "30%" }}
+          style={{
+            width: 300,
+            height: 300,
+            background: "rgba(16,185,129,0.08)",
+            top: "40%",
+            left: "30%",
+          }}
           animate={{ x: [0, 20, -20, 0], y: [0, -15, 10, 0] }}
           transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -380,7 +477,6 @@ const Index = () => {
 
         {/* ── Main Content ── */}
         <div className="relative z-10 container mx-auto px-4 text-center max-w-5xl pt-24 md:pt-28">
-
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: -20, scale: 0.9 }}
@@ -390,7 +486,8 @@ const Index = () => {
             style={{
               background: "rgba(52,211,153,0.08)",
               border: "1px solid rgba(52,211,153,0.25)",
-              boxShadow: "0 0 30px rgba(52,211,153,0.12), inset 0 0 20px rgba(52,211,153,0.04)",
+              boxShadow:
+                "0 0 30px rgba(52,211,153,0.12), inset 0 0 20px rgba(52,211,153,0.04)",
             }}
           >
             <motion.span
@@ -409,19 +506,27 @@ const Index = () => {
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+            transition={{
+              delay: 0.2,
+              duration: 0.8,
+              ease: [0.25, 0.46, 0.45, 0.94],
+            }}
             className="font-display text-5xl md:text-7xl lg:text-8xl font-bold leading-[1.04] tracking-tight mb-4"
           >
             <span
               className="block text-white"
-              style={{ textShadow: "0 2px 40px rgba(0,0,0,0.9), 0 0 80px rgba(0,0,0,0.6)" }}
+              style={{
+                textShadow:
+                  "0 2px 40px rgba(0,0,0,0.9), 0 0 80px rgba(0,0,0,0.6)",
+              }}
             >
               Master Biology
             </span>
             <span
               className="block mt-1"
               style={{
-                background: "linear-gradient(135deg, #34d399 0%, #06b6d4 50%, #34d399 100%)",
+                background:
+                  "linear-gradient(135deg, #34d399 0%, #06b6d4 50%, #34d399 100%)",
                 backgroundSize: "200% auto",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
@@ -443,14 +548,20 @@ const Index = () => {
           >
             <div
               className="h-[1px] w-12"
-              style={{ background: "linear-gradient(90deg, transparent, rgba(52,211,153,0.5))" }}
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent, rgba(52,211,153,0.5))",
+              }}
             />
             <span className="text-sm text-emerald-light/70 font-mono tracking-widest uppercase">
               Currently exploring
             </span>
             <div
               className="h-[1px] w-12"
-              style={{ background: "linear-gradient(90deg, rgba(52,211,153,0.5), transparent)" }}
+              style={{
+                background:
+                  "linear-gradient(90deg, rgba(52,211,153,0.5), transparent)",
+              }}
             />
           </motion.div>
 
@@ -462,14 +573,20 @@ const Index = () => {
           >
             <span
               className="text-2xl md:text-3xl font-display font-semibold tracking-tight"
-              style={{ color: "rgba(103,232,249,0.9)", textShadow: "0 0 20px rgba(6,182,212,0.4)" }}
+              style={{
+                color: "rgba(103,232,249,0.9)",
+                textShadow: "0 0 20px rgba(6,182,212,0.4)",
+              }}
             >
               {typedWord}
               <motion.span
                 animate={{ opacity: [1, 0] }}
                 transition={{ duration: 0.6, repeat: Infinity }}
                 className="ml-[2px] inline-block w-[3px] h-7 rounded-full align-middle"
-                style={{ background: "rgba(6,182,212,0.8)", marginBottom: "2px" }}
+                style={{
+                  background: "rgba(6,182,212,0.8)",
+                  marginBottom: "2px",
+                }}
               />
             </span>
           </motion.div>
@@ -480,11 +597,17 @@ const Index = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.75, duration: 0.6 }}
             className="text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed"
-            style={{ color: "rgba(255,255,255,0.6)", textShadow: "0 1px 8px rgba(0,0,0,0.6)" }}
+            style={{
+              color: "rgba(255,255,255,0.6)",
+              textShadow: "0 1px 8px rgba(0,0,0,0.6)",
+            }}
           >
             Explore the most fascinating biological processes through{" "}
-            <span style={{ color: "rgba(167,243,208,0.85)" }}>immersive animations</span>,{" "}
-            interactive diagrams, and step-by-step breakdowns — built for students who learn by doing.
+            <span style={{ color: "rgba(167,243,208,0.85)" }}>
+              immersive animations
+            </span>
+            , interactive diagrams, and step-by-step breakdowns — built for
+            students who learn by doing.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -501,18 +624,26 @@ const Index = () => {
               style={{
                 background: "linear-gradient(135deg, #059669, #0891b2)",
                 color: "white",
-                boxShadow: "0 0 0 1px rgba(52,211,153,0.3), 0 4px 24px rgba(52,211,153,0.25), 0 1px 0 rgba(255,255,255,0.1) inset",
+                boxShadow:
+                  "0 0 0 1px rgba(52,211,153,0.3), 0 4px 24px rgba(52,211,153,0.25), 0 1px 0 rgba(255,255,255,0.1) inset",
               }}
             >
-              <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{ background: "linear-gradient(135deg, #10b981, #06b6d4)" }}
+              <span
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{
+                  background: "linear-gradient(135deg, #10b981, #06b6d4)",
+                }}
               />
               <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 pointer-events-none" />
               <span className="relative flex items-center gap-3">
                 Explore Cycles
                 <motion.span
                   animate={{ x: [0, 5, 0] }}
-                  transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                  transition={{
+                    duration: 1.4,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
                 >
                   <ArrowRight className="w-5 h-5" />
                 </motion.span>
@@ -530,8 +661,12 @@ const Index = () => {
                 backdropFilter: "blur(12px)",
                 boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.background = "rgba(255,255,255,0.08)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.background = "rgba(255,255,255,0.04)")
+              }
             >
               Browse Categories
             </a>
@@ -556,11 +691,21 @@ const Index = () => {
                   <stat.icon className="w-4 h-4 text-emerald-light" />
                 </div>
                 <div className="text-left">
-                  <div className="text-base font-bold text-white leading-none">{stat.value}</div>
-                  <div className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>{stat.label}</div>
+                  <div className="text-base font-bold text-white leading-none">
+                    {stat.value}
+                  </div>
+                  <div
+                    className="text-xs mt-0.5"
+                    style={{ color: "rgba(255,255,255,0.4)" }}
+                  >
+                    {stat.label}
+                  </div>
                 </div>
                 {i < stats.length - 1 && (
-                  <div className="hidden md:block w-px h-6 ml-4" style={{ background: "rgba(255,255,255,0.1)" }} />
+                  <div
+                    className="hidden md:block w-px h-6 ml-4"
+                    style={{ background: "rgba(255,255,255,0.1)" }}
+                  />
                 )}
               </div>
             ))}
@@ -585,7 +730,11 @@ const Index = () => {
               className="w-1 h-2 rounded-full"
               style={{ background: "rgba(52,211,153,0.8)" }}
               animate={{ y: [0, 8, 0], opacity: [1, 0.3, 1] }}
-              transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+              transition={{
+                duration: 1.6,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
             />
           </motion.div>
         </motion.div>
@@ -606,23 +755,32 @@ const Index = () => {
               Explore <span className="gradient-text">Biology Cycles</span>
             </h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Dive into interactive explorations of the most important biological processes.
+              Dive into interactive explorations of the most important
+              biological processes.
             </p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cyclesData.slice(0, 6).map((cycle, i) => (
-              <motion.div
-                key={cycle.id}
-                custom={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeUp}
-              >
-                <CycleCard cycle={cycle} />
-              </motion.div>
-            ))}
+            {loadingFeatured ? (
+              <div className="col-span-full text-center text-muted-foreground">
+                Loading featured cycles...
+              </div>
+            ) : (
+              (featured.length ? featured : cyclesData.slice(0, 6)).map(
+                (cycle, i) => (
+                  <motion.div
+                    key={cycle.id}
+                    custom={i}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    variants={fadeUp}
+                  >
+                    <CycleCard cycle={cycle} />
+                  </motion.div>
+                ),
+              )
+            )}
           </div>
 
           <motion.div

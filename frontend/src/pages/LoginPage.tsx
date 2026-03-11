@@ -1,18 +1,53 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Dna, Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import FloatingParticles from "@/components/FloatingParticles";
+import { authService } from "@/services/authService";
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // redirect if already logged in
+  const currentUser = authService.getCurrentUser();
+  if (currentUser) {
+    navigate(currentUser.role === "editor" ? "/admin/content" : "/admin");
+    return null;
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Will be connected to backend later
-    alert("Login functionality requires Lovable Cloud setup. Coming soon!");
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await authService.login({ email, password });
+
+      if (response.user) {
+        // Route based on user role
+        if (
+          response.user.role === "admin" ||
+          response.user.role === "super_admin"
+        ) {
+          navigate("/admin");
+        } else if (response.user.role === "editor") {
+          navigate("/admin/content");
+        } else {
+          navigate("/");
+        }
+      }
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message || "Login failed. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -55,6 +90,12 @@ const LoginPage = () => {
           <p className="text-muted-foreground mb-8">
             Sign in to access the admin dashboard.
           </p>
+
+          {error && (
+            <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 text-sm">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -102,9 +143,10 @@ const LoginPage = () => {
 
             <button
               type="submit"
-              className="w-full py-3 rounded-xl gradient-accent text-primary-foreground font-semibold hover:opacity-90 transition-opacity glow-emerald"
+              disabled={loading}
+              className="w-full py-3 rounded-xl gradient-accent text-primary-foreground font-semibold hover:opacity-90 transition-opacity glow-emerald disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign In
+              {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import {
   BookOpen,
   Users,
@@ -7,51 +8,109 @@ import {
   TrendingUp,
   ArrowUpRight,
 } from "lucide-react";
-
-const stats = [
-  {
-    label: "Total Cycles",
-    value: "6",
-    change: "+2 this month",
-    icon: BookOpen,
-  },
-  {
-    label: "Total Editors",
-    value: "3",
-    change: "+1 this month",
-    icon: Users,
-  },
-  {
-    label: "Total Views",
-    value: "52.4K",
-    change: "+12% vs last month",
-    icon: Eye,
-  },
-  {
-    label: "Pending Approvals",
-    value: "2",
-    change: "Review needed",
-    icon: Clock,
-  },
-];
-
-const recentActivity = [
-  { title: "Krebs Cycle updated", user: "Dr. Smith", time: "2h ago" },
-  { title: "Nitrogen Cycle published", user: "Jane Doe", time: "5h ago" },
-  { title: "New editor added", user: "Admin", time: "1d ago" },
-  { title: "Water Cycle video added", user: "John K.", time: "2d ago" },
-];
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.08, duration: 0.5 },
-  }),
-};
+import { userService } from "@/services/userService";
 
 const AdminDashboard = () => {
+  const [stats, setStats] = useState([
+    {
+      label: "Total Cycles",
+      value: "0",
+      change: "Loading...",
+      icon: BookOpen,
+    },
+    {
+      label: "Total Editors",
+      value: "0",
+      change: "Loading...",
+      icon: Users,
+    },
+    {
+      label: "Published Cycles",
+      value: "0",
+      change: "Loading...",
+      icon: Eye,
+    },
+    {
+      label: "Pending Approvals",
+      value: "0",
+      change: "Review needed",
+      icon: Clock,
+    },
+  ]);
+
+  const [recentActivity, setRecentActivity] = useState([
+    { title: "Loading...", user: "System", time: "now" },
+  ]);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const dashboardStats = await userService.getDashboardStats();
+
+        setStats([
+          {
+            label: "Total Cycles",
+            value: String(dashboardStats.totalCycles),
+            change: `${dashboardStats.publishedCycles} published`,
+            icon: BookOpen,
+          },
+          {
+            label: "Total Users",
+            value: String(dashboardStats.totalUsers),
+            change: `${dashboardStats.activeEditors} editors`,
+            icon: Users,
+          },
+          {
+            label: "Published Cycles",
+            value: String(dashboardStats.publishedCycles),
+            change: `${dashboardStats.draftCycles} drafts`,
+            icon: Eye,
+          },
+          {
+            label: "Pending Approvals",
+            value: String(dashboardStats.pendingApproval),
+            change: "Review needed",
+            icon: Clock,
+          },
+        ]);
+
+        if (dashboardStats.recentActivity) {
+          setRecentActivity(dashboardStats.recentActivity);
+        }
+      } catch (err) {
+        console.error("Failed to fetch dashboard data:", err);
+        setError("Failed to load dashboard statistics");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  const fadeUp = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.08, duration: 0.5 },
+    }),
+  };
+
+  if (error) {
+    return (
+      <div className="p-6 md:p-8 max-w-7xl mx-auto">
+        <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       <motion.div

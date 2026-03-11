@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
+import { authService } from "@/services/authService";
 import {
   LayoutDashboard,
   BookOpen,
@@ -18,6 +19,7 @@ const navItems = [
   { label: "Content", icon: BookOpen, to: "/admin/content" },
   { label: "Users", icon: Users, to: "/admin/users" },
   { label: "Categories", icon: FolderTree, to: "/admin/categories" },
+  { label: "Class Levels", icon: FolderTree, to: "/admin/class-levels" },
   { label: "Settings", icon: Settings, to: "/admin/settings" },
 ];
 
@@ -70,13 +72,16 @@ const AdminSidebar = () => {
 
       {/* Bottom */}
       <div className="p-2 border-t border-sidebar-border space-y-1">
-        <Link
-          to="/"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
+        <button
+          onClick={() => {
+            authService.logout();
+            window.location.href = "/login";
+          }}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />
           {!collapsed && <span>Logout</span>}
-        </Link>
+        </button>
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors w-full"

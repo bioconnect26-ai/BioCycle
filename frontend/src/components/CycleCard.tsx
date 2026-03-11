@@ -1,18 +1,20 @@
 import { Link } from "react-router-dom";
-import { CycleData } from "@/data/cycles";
+import { Atom } from "lucide-react";
+import { CycleData } from "@/services/cycleService"; // switch to service type
 
 interface CycleCardProps {
   cycle: CycleData;
 }
 
-const difficultyColor = {
-  Beginner: "bg-emerald/10 text-emerald border-emerald/20",
-  Intermediate: "bg-accent/10 text-accent border-accent/20",
-  Advanced: "bg-destructive/10 text-destructive border-destructive/20",
+const classLevelColor = {
+  "9th": "bg-emerald/10 text-emerald border-emerald/20",
+  "10th": "bg-accent/10 text-accent border-accent/20",
+  "11th": "bg-destructive/10 text-destructive border-destructive/20",
+  "12th": "bg-blue-500/10 text-blue-500 border-blue-500/20",
 };
 
 const CycleCard = ({ cycle }: CycleCardProps) => {
-  const Icon = cycle.icon;
+  const Icon = cycle.icon || Atom;
 
   return (
     <Link to={`/cycle/${cycle.slug}`} className="block group">
@@ -22,9 +24,9 @@ const CycleCard = ({ cycle }: CycleCardProps) => {
             <Icon className="w-6 h-6 text-primary-foreground" />
           </div>
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${difficultyColor[cycle.difficulty]}`}
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${classLevelColor[cycle.classLevel?.displayName || "9th"]}`}
           >
-            {cycle.difficulty}
+            {cycle.classLevel?.displayName || "9th"}
           </span>
         </div>
 
@@ -36,7 +38,7 @@ const CycleCard = ({ cycle }: CycleCardProps) => {
         </p>
 
         <div className="flex flex-wrap gap-2">
-          {cycle.tags.map((tag) => (
+          {(cycle.tags || []).map((tag) => (
             <span
               key={tag}
               className="px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-xs"
