@@ -41,6 +41,18 @@ export const defineUserModel = (sequelize) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      failedLoginAttempts: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
+      lockoutUntil: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      lastFailedLogin: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
       createdAt: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
@@ -69,6 +81,39 @@ export const defineUserModel = (sequelize) => {
 
   User.prototype.comparePassword = async function (password) {
     return bcrypt.compare(password, this.password);
+  };
+
+  // Check if account is locked due to failed attempts
+  User.prototype.isAccountLocked = function () {
+    if (!this.lockoutUntil) return false;
+    return new Date() < this.lockoutUntil;
+  };
+
+  // Record a failed login attempt
+  User.prototype.recordFailedLogin = async function () {
+    const newFailedAttempts = (this.failedLoginAttempts || 0) + 1;
+    const updates = {
+      failedLoginAttempts: newFailedAttempts,
+      lastFailedLogin: new Date(),
+    };
+
+    // Lock account after 5 failed attempts for 30 minutes
+    if (newFailedAttempts >= 5) {
+      const lockoutTime = new Date();
+      lockoutTime.setMinutes(lockoutTime.getMinutes() + 30);
+      updates.lockoutUntil = lockoutTime;
+    }
+
+    await this.update(updates);
+  };
+
+  // Reset failed login attempts after successful login
+  User.prototype.resetLoginAttempts = async function () {
+    await this.update({
+      failedLoginAttempts: 0,
+      lockoutUntil: null,
+      lastFailedLogin: null,
+    });
   };
 
   User.prototype.toJSON = function () {

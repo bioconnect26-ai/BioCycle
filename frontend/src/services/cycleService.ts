@@ -67,6 +67,8 @@ export interface CycleData {
   classLevelId: string;
   classLevel?: ClassLevel;
   videoUrl?: string;
+  simulationUrl?: string;
+  simulationAttribution?: string;
   coverImage?: string;
   tags?: string[];
   icon?: ElementType | string;

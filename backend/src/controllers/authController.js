@@ -8,9 +8,51 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+// Validation helpers
+const isValidEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) && email.length <= 100;
+};
+
+const isValidPassword = (password) => {
+  // At least 8 chars, 1 uppercase, 1 lowercase, 1 number
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+  return passwordRegex.test(password);
+};
+
 export const register = async (req, res) => {
   try {
     const { email, password, fullName } = req.body;
+
+    // Validate inputs
+    if (!email || !password || !fullName) {
+      return res.status(400).json({
+        success: false,
+        message: "Email, password, and full name are required",
+      });
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email format",
+      });
+    }
+
+    if (!isValidPassword(password)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Password must be at least 8 characters with uppercase, lowercase, and numbers",
+      });
+    }
+
+    if (fullName.length < 2 || fullName.length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Full name must be between 2 and 100 characters",
+      });
+    }
 
     // Check if user already exists
     const existingUser = await User.findOne({ where: { email } });
@@ -23,7 +65,7 @@ export const register = async (req, res) => {
 
     // Create new user
     const user = await User.create({
-      email,
+      email: email.toLowerCase(),
       password,
       fullName,
       role: "editor",
@@ -56,12 +98,30 @@ export const login = async (req, res) => {
       });
     }
 
-    // Find user
-    const user = await User.findOne({ where: { email } });
+    if (!isValidEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email format",
+      });
+    }
+
+    // Find user (case-insensitive)
+    const user = await User.findOne({
+      where: { email: email.toLowerCase() },
+    });
     if (!user) {
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
+      });
+    }
+
+    // Check if account is locked
+    if (user.isAccountLocked()) {
+      return res.status(429).json({
+        success: false,
+        message:
+          "Account temporarily locked due to multiple failed login attempts. Try again in 30 minutes.",
       });
     }
 
@@ -81,12 +141,20 @@ export const login = async (req, res) => {
     }
 
     // Verify password
-    const isValidPassword = await user.comparePassword(password);
-    if (!isValidPassword) {
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      // Record failed attempt
+      await user.recordFailedLogin();
+
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
       });
+    }
+
+    // Reset failed login attempts on successful login
+    if (user.failedLoginAttempts > 0) {
+      await user.resetLoginAttempts();
     }
 
     // Update last login

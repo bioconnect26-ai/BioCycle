@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle, XCircle, Users } from "lucide-react";
+import { CheckCircle, XCircle, Users, Edit2 } from "lucide-react";
 import { userService, User } from "@/services/userService";
 
 const AdminUsers = () => {
@@ -9,6 +9,8 @@ const AdminUsers = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"all" | "pending">("pending");
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [selectedRole, setSelectedRole] = useState<string>("");
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -47,6 +49,22 @@ const AdminUsers = () => {
     } catch (err) {
       console.error("Failed to reject editor:", err);
       alert("Failed to reject editor");
+    }
+  };
+
+  const handleChangeRole = async (userId: string, newRole: string) => {
+    try {
+      await userService.changeUserRole(userId, newRole);
+      setUsers(
+        users.map((u) =>
+          u.id === userId ? { ...u, role: newRole as User["role"] } : u,
+        ),
+      );
+      setEditingUserId(null);
+      alert("Role changed successfully");
+    } catch (err) {
+      console.error("Failed to change role:", err);
+      alert("Failed to change role");
     }
   };
 
@@ -178,6 +196,9 @@ const AdminUsers = () => {
                   <th className="text-left p-4 font-semibold text-foreground">
                     Joined
                   </th>
+                  <th className="text-left p-4 font-semibold text-foreground">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -191,9 +212,25 @@ const AdminUsers = () => {
                     </td>
                     <td className="p-4 text-muted-foreground">{user.email}</td>
                     <td className="p-4">
-                      <span className="inline-flex px-2 py-1 rounded bg-accent/20 text-accent text-xs font-medium">
-                        {user.role}
-                      </span>
+                      {editingUserId === user.id ? (
+                        <select
+                          value={selectedRole}
+                          onChange={(e) => {
+                            const newRole = e.target.value;
+                            handleChangeRole(user.id, newRole);
+                          }}
+                          className="px-2 py-1 rounded border border-border bg-card text-foreground text-xs"
+                        >
+                          <option value="">Select role...</option>
+                          <option value="admin">admin</option>
+                          <option value="editor">editor</option>
+                          <option value="viewer">viewer</option>
+                        </select>
+                      ) : (
+                        <span className="inline-flex px-2 py-1 rounded bg-accent/20 text-accent text-xs font-medium">
+                          {user.role}
+                        </span>
+                      )}
                     </td>
                     <td className="p-4">
                       <span
@@ -210,6 +247,18 @@ const AdminUsers = () => {
                     </td>
                     <td className="p-4 text-muted-foreground text-xs">
                       {new Date(user.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="p-4">
+                      <button
+                        onClick={() => {
+                          setEditingUserId(user.id);
+                          setSelectedRole(user.role);
+                        }}
+                        className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 transition-colors"
+                      >
+                        <Edit2 className="w-3 h-3" />
+                        Change Role
+                      </button>
                     </td>
                   </tr>
                 ))}

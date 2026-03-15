@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import {
   ArrowLeft,
   Play,
-  Download,
+  ExternalLink,
   CheckCircle,
   Brain,
   Lightbulb,
@@ -658,6 +658,7 @@ const CycleDetailPage = () => {
   const [activeStep, setActiveStep] = useState<number | null>(null);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [flashcardIdx, setFlashcardIdx] = useState(0);
+  const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
   const { scrollYProgress } = useScroll();
 
   useEffect(() => {
@@ -756,46 +757,6 @@ const CycleDetailPage = () => {
   const totalProgress = Math.round(
     (completedSteps.size / Math.max(cycle.steps.length, 1)) * 100,
   );
-
-  const handleDownloadNotes = () => {
-    const lines = [
-      cycle.title,
-      "",
-      cycle.description,
-      "",
-      cycleCategory ? `Category: ${cycleCategory}` : null,
-      cycleLevel ? `Class Level: ${cycleLevel}` : null,
-      cycle.videoUrl ? `Video: ${cycle.videoUrl}` : null,
-      cycle.tags?.length ? `Tags: ${cycle.tags.join(", ")}` : null,
-      "",
-      "Quick Facts",
-      ...(cycle.quickFacts.length
-        ? cycle.quickFacts.map((fact) => `- ${fact.label}: ${fact.value}`)
-        : ["- No quick facts added yet."]),
-      "",
-      "Steps",
-      ...(cycle.steps.length
-        ? cycle.steps.flatMap((step, index) => [
-            `${index + 1}. ${step.title}`,
-            `   Summary: ${step.description}`,
-            `   Detail: ${step.detail}`,
-            step.memoryTrick ? `   Memory Trick: ${step.memoryTrick}` : null,
-          ])
-        : ["- No steps added yet."]),
-    ]
-      .filter(Boolean)
-      .join("\n");
-
-    const blob = new Blob([lines], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${cycle.slug || "cycle"}-study-notes.txt`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-  };
 
   return (
     <div
@@ -1343,14 +1304,22 @@ const CycleDetailPage = () => {
                           height: 260,
                           perspective: 900,
                         }}
-                        onClick={() =>
-                          setFlashcardIdx((state) => (!state ? 0 : state))
-                        }
+                        onClick={() => {
+                          setFlippedCards((prev) => {
+                            const newFlipped = new Set(prev);
+                            if (newFlipped.has(flashcardIdx)) {
+                              newFlipped.delete(flashcardIdx);
+                            } else {
+                              newFlipped.add(flashcardIdx);
+                            }
+                            return newFlipped;
+                          });
+                        }}
                       >
                         <motion.div
                           className="relative w-full h-full"
                           animate={{
-                            rotateY: flashcardIdx % 2 === 0 ? 0 : 180,
+                            rotateY: flippedCards.has(flashcardIdx) ? 180 : 0,
                           }}
                           transition={{
                             duration: 0.55,
@@ -1578,94 +1547,110 @@ const CycleDetailPage = () => {
         </div>
       </section>
 
-      {/* ── VIDEO ── */}
-      {cycle.videoUrl && (
-        <section
-          className="py-16"
-          style={{
-            background: T.surfaceAlt,
-            borderTop: `1px solid ${T.border}`,
-          }}
-        >
-          <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-            >
-              <h2
-                className="font-display text-2xl font-bold mb-6 flex items-center gap-3"
-                style={{ color: T.text }}
-              >
-                <Play className="w-5 h-5" style={{ color: T.emerald }} /> Watch
-                & Learn
-              </h2>
-              <div
-                className="max-w-4xl mx-auto rounded-3xl overflow-hidden"
-                style={{
-                  border: `1.5px solid ${T.border}`,
-                  boxShadow: T.shadowMd,
-                }}
-              >
-                <div className="aspect-video bg-slate-900">
-                  <iframe
-                    src={cycle.videoUrl}
-                    title={cycle.title}
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-      )}
-
-      {/* ── DOWNLOAD ── */}
+      {/* ── VIDEO & SIMULATION ── */}
       <section
         className="py-16"
         style={{ background: "var(--background, #f8fafc)" }}
       >
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="max-w-md mx-auto rounded-3xl p-8 text-center"
-            style={{
-              background: T.surface,
-              border: `1.5px solid ${T.border}`,
-              boxShadow: T.shadowLg,
-            }}
-          >
-            <div
-              className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center"
-              style={{
-                background: T.gradHero,
-                boxShadow: "0 0 24px rgba(5,150,105,0.3)",
-              }}
-            >
-              <Download className="w-6 h-6 text-white" />
-            </div>
-            <h3
-              className="font-display text-xl font-bold mb-2"
-              style={{ color: T.text }}
-            >
-              Download Study Notes
-            </h3>
-            <p className="text-sm mb-6" style={{ color: T.textSoft }}>
-              Get a comprehensive PDF summary of {cycle.title} with diagrams and
-              key points.
-            </p>
-            <button
-              onClick={handleDownloadNotes}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white transition-all hover:scale-[1.03]"
-              style={{ background: T.gradHero, boxShadow: T.shadow }}
-            >
-              <Download className="w-4 h-4" /> Download Notes
-            </button>
-          </motion.div>
+          <div className="max-w-5xl mx-auto space-y-8">
+            {/* YouTube Video Player */}
+            {cycle.videoUrl && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="rounded-3xl overflow-hidden"
+                style={{
+                  border: `1.5px solid ${T.border}`,
+                  boxShadow: T.shadowLg,
+                }}
+              >
+                <div
+                  className="relative w-full bg-black rounded-3xl overflow-hidden"
+                  style={{ paddingBottom: "56.25%" }}
+                >
+                  <iframe
+                    className="absolute inset-0 w-full h-full rounded-3xl"
+                    src={
+                      cycle.videoUrl.includes("youtube.com") ||
+                      cycle.videoUrl.includes("youtu.be")
+                        ? `https://www.youtube.com/embed/${
+                            cycle.videoUrl.includes("v=")
+                              ? cycle.videoUrl.split("v=")[1].split("&")[0]
+                              : cycle.videoUrl.split("/").pop()
+                          }?rel=0&modestbranding=1`
+                        : cycle.videoUrl
+                    }
+                    title="Cycle Video"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    style={{ border: "none" }}
+                  />
+                </div>
+              </motion.div>
+            )}
+
+            {/* Simulation Button */}
+            {cycle.simulationUrl && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="max-w-md mx-auto rounded-3xl p-8 text-center"
+                style={{
+                  background: T.surface,
+                  border: `1.5px solid ${T.border}`,
+                  boxShadow: T.shadowLg,
+                }}
+              >
+                <div
+                  className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center"
+                  style={{
+                    background: T.gradHero,
+                    boxShadow: "0 0 24px rgba(5,150,105,0.3)",
+                  }}
+                >
+                  <Play className="w-6 h-6 text-white" />
+                </div>
+                <h3
+                  className="font-display text-xl font-bold mb-2"
+                  style={{ color: T.text }}
+                >
+                  Start Simulation
+                </h3>
+                <p className="text-sm mb-6" style={{ color: T.textSoft }}>
+                  Launch the interactive simulation for {cycle.title} and
+                  explore the concepts in action.
+                </p>
+                <a
+                  href={cycle.simulationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white transition-all hover:scale-[1.03]"
+                  style={{ background: T.gradHero, boxShadow: T.shadow }}
+                >
+                  <Play className="w-4 h-4" /> Launch Simulation
+                </a>
+                {cycle.simulationAttribution && (
+                  <div
+                    className="mt-6 pt-6 border-t"
+                    style={{ borderColor: T.border }}
+                  >
+                    <p className="text-xs" style={{ color: T.textXSoft }}>
+                      <span
+                        style={{ color: T.textSoft }}
+                        className="font-semibold"
+                      >
+                        Attribution:
+                      </span>{" "}
+                      {cycle.simulationAttribution}
+                    </p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </div>
         </div>
       </section>
 

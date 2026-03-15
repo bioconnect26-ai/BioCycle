@@ -59,13 +59,13 @@ export const userService = {
 
   // Approve editor request (admin)
   approveEditor: async (userId: string) => {
-    const { data } = await apiClient.post(`/users/${userId}/approve`, {});
+    const { data } = await apiClient.put(`/users/${userId}/approve`, {});
     return data;
   },
 
   // Reject editor request (admin)
   rejectEditor: async (userId: string) => {
-    const { data } = await apiClient.post(`/users/${userId}/reject`, {});
+    const { data } = await apiClient.put(`/users/${userId}/reject`, {});
     return data;
   },
 

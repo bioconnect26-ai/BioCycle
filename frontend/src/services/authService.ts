@@ -27,19 +27,52 @@ export interface AuthResponse {
   refreshToken: string;
 }
 
+// Storage strategy: Use sessionStorage (cleared on browser close) for tokens
+// Fall back to localStorage for user session persistence
+const useSecureStorage = () => {
+  // Try to use sessionStorage if available
+  if (typeof window !== "undefined" && window.sessionStorage) {
+    return window.sessionStorage;
+  }
+  return typeof window !== "undefined" ? window.localStorage : null;
+};
+
 export const authService = {
   login: async (credentials: LoginCredentials) => {
-    const { data } = await apiClient.post<AuthResponse>(
-      "/auth/login",
-      credentials,
-    );
+    try {
+      const { data } = await apiClient.post<AuthResponse>(
+        "/auth/login",
+        credentials,
+      );
 
-    // Store tokens and user
-    localStorage.setItem("accessToken", data.accessToken);
-    localStorage.setItem("refreshToken", data.refreshToken);
-    localStorage.setItem("user", JSON.stringify(data.user));
+      // Store tokens securely
+      const storage = useSecureStorage();
+      if (storage) {
+        storage.setItem("accessToken", data.accessToken);
+        storage.setItem("refreshToken", data.refreshToken);
+        // User info in sessionStorage is okay as it doesn't contain secrets
+        storage.setItem("user", JSON.stringify(data.user));
+        // Store token expiration for better UX
+        storage.setItem(
+          "tokenExpiry",
+          new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        );
+      }
 
-    return data;
+      return data;
+    } catch (error: any) {
+      // Handle account lockout
+      if (error.response?.status === 429) {
+        throw {
+          ...error,
+          isLocked: true,
+          lockMessage:
+            error.response?.data?.message ||
+            "Account temporarily locked. Try again in 30 minutes.",
+        };
+      }
+      throw error;
+    }
   },
 
   register: async (registerData: RegisterData) => {
@@ -61,17 +94,44 @@ export const authService = {
   },
 
   logout: () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("user");
+    const storage = useSecureStorage();
+    if (storage) {
+      storage.removeItem("accessToken");
+      storage.removeItem("refreshToken");
+      storage.removeItem("user");
+      storage.removeItem("tokenExpiry");
+    }
   },
 
   getCurrentUser: () => {
-    const userStr = localStorage.getItem("user");
+    const storage = useSecureStorage();
+    if (!storage) return null;
+
+    const userStr = storage.getItem("user");
     return userStr ? JSON.parse(userStr) : null;
   },
 
-  getAccessToken: () => localStorage.getItem("accessToken"),
+  getAccessToken: () => {
+    const storage = useSecureStorage();
+    if (!storage) return null;
+    return storage.getItem("accessToken");
+  },
+
+  // Check if token is expired
+  isTokenExpired: () => {
+    const storage = useSecureStorage();
+    if (!storage) return true;
+
+    const expiry = storage.getItem("tokenExpiry");
+    if (!expiry) return true;
+
+    return new Date() > new Date(expiry);
+  },
+
+  // Clear all auth data on logout or session expiry
+  clearAuthData: () => {
+    authService.logout();
+  },
 };
 
 export default authService;

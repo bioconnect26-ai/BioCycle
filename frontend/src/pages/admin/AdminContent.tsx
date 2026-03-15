@@ -28,6 +28,8 @@ type CycleFormData = {
   categoryId: string;
   classLevelId: string;
   videoUrl: string;
+  simulationUrl: string;
+  simulationAttribution: string;
   coverImage: string;
   icon: string;
   color: string;
@@ -76,6 +78,8 @@ const emptyForm = (): CycleFormData => ({
   categoryId: "",
   classLevelId: "",
   videoUrl: "",
+  simulationUrl: "",
+  simulationAttribution: "",
   coverImage: "",
   icon: "atom",
   color: "#059669",
@@ -103,6 +107,8 @@ const normalizeFormData = (
   categoryId: cycle?.categoryId || "",
   classLevelId: cycle?.classLevelId || "",
   videoUrl: cycle?.videoUrl || "",
+  simulationUrl: cycle?.simulationUrl || "",
+  simulationAttribution: cycle?.simulationAttribution || "",
   coverImage: cycle?.coverImage || "",
   icon: typeof cycle?.icon === "string" ? cycle.icon : "atom",
   color: cycle?.color || "#059669",
@@ -355,6 +361,8 @@ const AdminContent = () => {
     categoryId: formData.categoryId,
     classLevelId: formData.classLevelId,
     videoUrl: formData.videoUrl.trim(),
+    simulationUrl: formData.simulationUrl.trim(),
+    simulationAttribution: formData.simulationAttribution.trim(),
     coverImage: formData.coverImage.trim(),
     icon: formData.icon.trim() || "atom",
     color: formData.color.trim() || "#059669",
@@ -594,6 +602,28 @@ const AdminContent = () => {
                   }
                   className="px-4 py-2 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
                 />
+                <input
+                  type="url"
+                  placeholder="Simulation URL"
+                  value={formData.simulationUrl}
+                  onChange={(event) =>
+                    updateForm("simulationUrl", event.target.value)
+                  }
+                  className="px-4 py-2 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none"
+                />
+              </div>
+
+              <textarea
+                placeholder="Simulation Attribution (e.g., 'PhET Interactive Simulations, University of Colorado Boulder')"
+                value={formData.simulationAttribution}
+                onChange={(event) =>
+                  updateForm("simulationAttribution", event.target.value)
+                }
+                className="px-4 py-2 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:border-emerald focus:ring-2 focus:ring-emerald/20 outline-none resize-none"
+                rows={2}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                 <input
                   type="text"
                   placeholder="Cover image URL"

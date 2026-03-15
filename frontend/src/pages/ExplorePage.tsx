@@ -15,6 +15,7 @@ import CycleCard from "@/components/CycleCard";
 import { cyclesData, categories } from "@/data/cycles";
 import { cycleService, CycleData } from "@/services/cycleService";
 import { categoryService } from "@/services/categoryService";
+import { classLevelService } from "@/services/classLevelService";
 
 /* ─── Design tokens (matches CycleDetailPage light theme) ─── */
 const T = {
@@ -219,10 +220,9 @@ const ExplorePage = () => {
 
   const [allCycles, setAllCycles] = useState<CycleData[]>([]);
   const [allCategories, setAllCategories] = useState<string[]>([]);
+  const [classLevels, setClassLevels] = useState<string[]>(["All"]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const classLevels = ["All", "9th", "10th", "11th", "12th"];
 
   // load data from API on mount
   useEffect(() => {
@@ -231,10 +231,16 @@ const ExplorePage = () => {
         setLoading(true);
         const cyclesRes = await cycleService.getAllCycles(1, 1000); // fetch all for now
         const catsRes = await categoryService.getAllCategories();
+        const levelsRes = await classLevelService.getAllClassLevels();
         const cyclesList = cyclesRes.data || cyclesRes;
         const catsList = catsRes.data || catsRes;
+        const levelsList = levelsRes.data || levelsRes;
         setAllCycles(cyclesList);
         setAllCategories(["All", ...catsList.map((c: any) => c.name)]);
+        setClassLevels([
+          "All",
+          ...levelsList.map((l: any) => l.displayName || l.name),
+        ]);
       } catch (err) {
         console.error("Failed to load explore data:", err);
         setError("Unable to load cycles or categories");

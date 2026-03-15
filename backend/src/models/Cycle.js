@@ -34,6 +34,14 @@ export const defineCycleModel = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      simulationUrl: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      simulationAttribution: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
       coverImage: {
         type: DataTypes.STRING,
         allowNull: true,
