@@ -2,7 +2,7 @@
   "version": 2,
   "functions": {
     "src/index.js": {
-      "runtime": "@vercel/node",
+      "runtime": "@vercel/node@3.0.0",
       "maxDuration": 30,
       "memory": 1024
     }
@@ -11,29 +11,6 @@
     {
       "src": "/api/(.*)",
       "dest": "src/index.js"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=60, s-maxage=120"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        }
-      ]
     }
   ]
 }
