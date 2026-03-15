@@ -2,14 +2,18 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
+
 import { sequelize } from "./db.js";
+
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/users.js";
 import cycleRoutes from "./routes/cycles.js";
 import categoryRoutes from "./routes/categories.js";
 import classLevelRoutes from "./routes/classLevels.js";
+
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { globalLimiter } from "./middleware/rateLimiter.js";
+
 import {
   compressionMiddleware,
   cacheHeaders,
@@ -19,20 +23,23 @@ import {
 
 dotenv.config();
 
-let dbInitialized = false;
-
 const app = express();
+
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || "development";
 
-// ============================================================================
-// PERFORMANCE & SECURITY MIDDLEWARE (CRITICAL - FIRST)
-// ============================================================================
+let dbInitialized = false;
 
-// Compression middleware - MUST be early
+//
+// ============================================================================
+// PERFORMANCE & SECURITY MIDDLEWARE
+// ============================================================================
+//
+
+// Compression first
 app.use(compressionMiddleware());
 
-// Security Middleware
+// Security headers
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -43,60 +50,53 @@ app.use(
         imgSrc: ["'self'", "data:", "https:"],
       },
     },
-  }),
-); // Set security HTTP headers
+  })
+);
 
-// HTTPS enforcement (production only)
-if (NODE_ENV === "production") {
-  app.use((req, res, next) => {
-    if (req.header("x-forwarded-proto") !== "https") {
-      res.redirect(301, `https://${req.header("host")}${req.url}`);
-    } else {
-      next();
-    }
-  });
-}
+//
+// ============================================================================
+// CORS
+// ============================================================================
+//
 
-// CORS configuration - optimized
 app.use(
   cors({
     origin: (
-      process.env.CORS_ORIGIN || "http://localhost:5173,http://localhost:8080"
+      process.env.CORS_ORIGIN ||
+      "http://localhost:5173,http://localhost:8080"
     ).split(","),
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    maxAge: 86400, // 24 hours
-  }),
+    maxAge: 86400,
+  })
 );
 
+//
 // ============================================================================
-// REQUEST PARSING MIDDLEWARE
+// BODY PARSING
 // ============================================================================
+//
 
-// Body parsing middleware - optimized
-app.use(express.json({ limit: "5mb" })); // Reduced from 10mb for faster parsing
-app.use(express.urlencoded({ limit: "5mb", extended: true }));
+app.use(express.json({ limit: "5mb" }));
+app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 
+//
 // ============================================================================
 // OPTIMIZATION MIDDLEWARE
 // ============================================================================
+//
 
-// Response time tracking
 app.use(responseTimeMiddleware);
-
-// Request deduplication (for Vercel serverless optimization)
 app.use(requestDeduplication);
-
-// Cache headers - MUST be before routes
 app.use(cacheHeaders);
-
-// Rate limiting
 app.use(globalLimiter);
 
+//
 // ============================================================================
-// REQUEST LOGGING (DEVELOPMENT ONLY)
+// DEVELOPMENT LOGGING
 // ============================================================================
+//
 
 if (NODE_ENV === "development") {
   app.use((req, res, next) => {
@@ -105,9 +105,52 @@ if (NODE_ENV === "development") {
   });
 }
 
+//
+// ============================================================================
+// DATABASE INITIALIZATION
+// ============================================================================
+//
+
+const initializeDatabase = async () => {
+  if (dbInitialized) return;
+
+  try {
+    await sequelize.authenticate();
+    console.log("✓ Database connection established");
+
+    if (NODE_ENV === "development") {
+      await sequelize.sync({ alter: true });
+      console.log("✓ Database models synchronized");
+    }
+
+    dbInitialized = true;
+  } catch (error) {
+    console.error("✗ Database initialization failed:", error.message);
+    throw error;
+  }
+};
+
+// Initialize DB before routes (important for serverless)
+app.use(async (req, res, next) => {
+  if (!dbInitialized) {
+    try {
+      await initializeDatabase();
+    } catch (error) {
+      console.error("Database initialization failed:", error);
+      return res.status(503).json({
+        success: false,
+        error: "Database connection failed",
+      });
+    }
+  }
+  next();
+});
+
+//
 // ============================================================================
 // API ROUTES
 // ============================================================================
+//
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
@@ -115,9 +158,11 @@ app.use("/api/cycles", cycleRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/class-levels", classLevelRoutes);
 
+//
 // ============================================================================
-// HEALTH CHECK ENDPOINT
+// HEALTH CHECK
 // ============================================================================
+//
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({
@@ -129,52 +174,29 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+//
 // ============================================================================
 // 404 HANDLER
 // ============================================================================
+//
 
 app.use(notFoundHandler);
 
+//
 // ============================================================================
-// ERROR HANDLER (MUST BE LAST)
+// ERROR HANDLER
 // ============================================================================
+//
 
 app.use(errorHandler);
 
+//
 // ============================================================================
-// DATABASE INITIALIZATION & SERVER START
+// LOCAL SERVER START (NOT FOR SERVERLESS)
 // ============================================================================
+//
 
-// Single database connection for serverless compatibility
-const initializeDatabase = async () => {
-  if (dbInitialized) {
-    return;
-  }
-
-  try {
-    // Test database connection
-    await sequelize.authenticate();
-    console.log("✓ Database connection established");
-
-    // Sync models with database (only alter in development)
-    await sequelize.sync({
-      alter: NODE_ENV === "development",
-      force: false,
-    });
-    console.log("✓ Database models synchronized");
-
-    dbInitialized = true;
-  } catch (error) {
-    console.error("✗ Database initialization failed:", error.message);
-    throw error;
-  }
-};
-
-// Export app for serverless (Vercel)
-export default app;
-
-// Start server only when run directly (not imported)
-if (process.env.NODE_ENV !== "production" || !process.env.SERVERLESS) {
+if (!process.env.SERVERLESS) {
   const startServer = async () => {
     try {
       await initializeDatabase();
@@ -194,18 +216,10 @@ if (process.env.NODE_ENV !== "production" || !process.env.SERVERLESS) {
   startServer();
 }
 
-// For serverless: initialize database on first request if needed
-app.use(async (req, res, next) => {
-  if (!dbInitialized) {
-    try {
-      await initializeDatabase();
-    } catch (error) {
-      console.error("Database initialization failed during request:", error);
-      return res.status(503).json({
-        success: false,
-        error: "Database connection failed",
-      });
-    }
-  }
-  next();
-});
+//
+// ============================================================================
+// EXPORT FOR SERVERLESS
+// ============================================================================
+//
+
+export default app;
