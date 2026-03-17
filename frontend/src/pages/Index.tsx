@@ -13,7 +13,11 @@ import heroBg from "@/assets/hero-bg.jpg";
 import { cyclesData } from "@/data/cycles"; // kept for fallback styling
 import CycleCard from "@/components/CycleCard";
 import { useEffect, useRef, useState } from "react";
-import { cycleService, CycleData } from "@/services/cycleService";
+import {
+  cycleService,
+  CycleData,
+  ClassLevel as CycleClassLevel,
+} from "@/services/cycleService";
 import { categoryService } from "@/services/categoryService";
 import { classLevelService } from "@/services/classLevelService";
 
@@ -344,13 +348,21 @@ const Index = () => {
   const [featured, setFeatured] = useState<CycleData[]>([]);
   const [loadingFeatured, setLoadingFeatured] = useState(true);
   const [heroStats, setHeroStats] = useState(defaultStats);
+  const [classLevels, setClassLevels] = useState<CycleClassLevel[]>([]);
+  const [selectedClassLevel, setSelectedClassLevel] = useState("all");
+
+  const featuredCyclesToShow = (
+    selectedClassLevel === "all"
+      ? featured
+      : featured.filter((cycle) => cycle.classLevelId === selectedClassLevel)
+  ).slice(0, 6);
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoadingFeatured(true);
         const [cyclesRes, categoriesRes, classLevelsRes] = await Promise.all([
-          cycleService.getAllCycles(1, 6),
+          cycleService.getAllCycles(1, 24),
           categoryService.getAllCategories(),
           classLevelService.getAllClassLevels(),
         ]);
@@ -369,6 +381,8 @@ const Index = () => {
           : Array.isArray(classLevelsRes)
             ? classLevelsRes
             : [];
+
+        setClassLevels(allClassLevels);
 
         const totalCycles =
           Number(cyclesRes?.pagination?.total) ||
@@ -796,28 +810,71 @@ const Index = () => {
             </p>
           </motion.div>
 
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeUp}
+            custom={1}
+            className="flex flex-wrap items-center justify-center gap-3 mb-10"
+          >
+            <button
+              onClick={() => setSelectedClassLevel("all")}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                selectedClassLevel === "all"
+                  ? "bg-emerald text-white shadow-lg shadow-emerald/20"
+                  : "border border-border bg-background/70 text-muted-foreground hover:border-emerald/40 hover:text-foreground"
+              }`}
+            >
+              All Levels
+            </button>
+            {classLevels.map((level) => (
+              <button
+                key={level.id}
+                onClick={() => setSelectedClassLevel(level.id)}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                  selectedClassLevel === level.id
+                    ? "bg-emerald text-white shadow-lg shadow-emerald/20"
+                    : "border border-border bg-background/70 text-muted-foreground hover:border-emerald/40 hover:text-foreground"
+                }`}
+              >
+                {level.displayName}
+              </button>
+            ))}
+          </motion.div>
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {loadingFeatured ? (
               <div className="col-span-full text-center text-muted-foreground">
                 Loading featured cycles...
               </div>
             ) : (
-              (featured.length ? featured : cyclesData.slice(0, 6)).map(
-                (cycle, i) => (
-                  <motion.div
-                    key={cycle.id}
-                    custom={i}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true }}
-                    variants={fadeUp}
-                  >
-                    <CycleCard cycle={cycle} />
-                  </motion.div>
-                ),
-              )
+              (featuredCyclesToShow.length
+                ? featuredCyclesToShow
+                : selectedClassLevel === "all"
+                  ? cyclesData.slice(0, 6)
+                  : []).map((cycle, i) => (
+                <motion.div
+                  key={cycle.id}
+                  custom={i}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  variants={fadeUp}
+                >
+                  <CycleCard cycle={cycle} />
+                </motion.div>
+              ))
             )}
           </div>
+
+          {!loadingFeatured &&
+          selectedClassLevel !== "all" &&
+          featuredCyclesToShow.length === 0 ? (
+            <div className="mt-6 text-center text-muted-foreground">
+              No featured cycles are available for this class level yet.
+            </div>
+          ) : null}
 
           <motion.div
             initial="hidden"

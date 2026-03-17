@@ -23,10 +23,18 @@ export const compressionMiddleware = () => {
  * Cache headers middleware for optimal caching
  */
 export const cacheHeaders = (req, res, next) => {
+  const isAuthenticatedRequest = Boolean(req.headers.authorization);
+
   // Cache API responses for read operations
   if (req.method === "GET") {
+    // Never cache authenticated/admin reads
+    if (isAuthenticatedRequest) {
+      res.set("Cache-Control", "private, no-cache, no-store, must-revalidate");
+      res.set("Pragma", "no-cache");
+      res.set("Expires", "0");
+    }
     // Cache public data
-    if (
+    else if (
       req.path.includes("/cycles") ||
       req.path.includes("/categories") ||
       req.path.includes("/class-levels")
