@@ -1,7 +1,23 @@
 import axios, { AxiosError, AxiosInstance } from "axios";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const trimTrailingSlash = (value: string) => value.replace(/\/+$/, "");
+
+const getApiBaseUrl = () => {
+  const configuredUrl =
+    import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+
+  if (configuredUrl) {
+    return trimTrailingSlash(configuredUrl);
+  }
+
+  if (typeof window !== "undefined") {
+    return `${window.location.origin}/api`;
+  }
+
+  return "http://localhost:5000/api";
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 // Get secure token storage
 const getStorage = () => {
@@ -17,6 +33,7 @@ export const apiClient: AxiosInstance = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
 });
 
 // Request interceptor - Add token to headers

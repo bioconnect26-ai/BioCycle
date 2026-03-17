@@ -27,8 +27,14 @@ const app = express();
 
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || "development";
+const isServerlessRuntime = Boolean(
+  process.env.VERCEL ||
+    process.env.AWS_LAMBDA_FUNCTION_NAME ||
+    process.env.SERVERLESS === "true",
+);
 
 let dbInitialized = false;
+let dbInitializationPromise = null;
 
 //
 // ============================================================================
@@ -36,10 +42,8 @@ let dbInitialized = false;
 // ============================================================================
 //
 
-// Compression first
 app.use(compressionMiddleware());
 
-// Security headers
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -50,7 +54,7 @@ app.use(
         imgSrc: ["'self'", "data:", "https:"],
       },
     },
-  })
+  }),
 );
 
 //
@@ -59,17 +63,31 @@ app.use(
 // ============================================================================
 //
 
+const allowedOrigins = (
+  process.env.CORS_ORIGIN || "http://localhost:5173,http://localhost:8080"
+)
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: (
-      process.env.CORS_ORIGIN ||
-      "http://localhost:5173,http://localhost:8080"
-    ).split(","),
+    origin: (origin, callback) => {
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     maxAge: 86400,
-  })
+  }),
 );
 
 //
@@ -111,52 +129,54 @@ if (NODE_ENV === "development") {
 // ============================================================================
 //
 
-const initializeDatabase = async () => {
-  if (dbInitialized) return;
+const getMissingDatabaseEnv = () => {
+  if (process.env.DATABASE_URL) {
+    return [];
+  }
 
-  try {
+  return ["DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD"].filter(
+    (key) => !process.env[key],
+  );
+};
+
+const initializeDatabase = async () => {
+  if (dbInitialized) {
+    return;
+  }
+
+  if (dbInitializationPromise) {
+    await dbInitializationPromise;
+    return;
+  }
+
+  dbInitializationPromise = (async () => {
+    const missingEnv = getMissingDatabaseEnv();
+    if (missingEnv.length > 0) {
+      throw new Error(
+        `Missing database environment variables: ${missingEnv.join(", ")}`,
+      );
+    }
+
     await sequelize.authenticate();
-    console.log("✓ Database connection established");
+    console.log("Database connection established");
 
     if (NODE_ENV === "development") {
       await sequelize.sync({ alter: true });
-      console.log("✓ Database models synchronized");
+      console.log("Database models synchronized");
     }
 
     dbInitialized = true;
+  })();
+
+  try {
+    await dbInitializationPromise;
   } catch (error) {
-    console.error("✗ Database initialization failed:", error.message);
+    console.error("Database initialization failed:", error.message);
     throw error;
+  } finally {
+    dbInitializationPromise = null;
   }
 };
-
-// Initialize DB before routes (important for serverless)
-app.use(async (req, res, next) => {
-  if (!dbInitialized) {
-    try {
-      await initializeDatabase();
-    } catch (error) {
-      console.error("Database initialization failed:", error);
-      return res.status(503).json({
-        success: false,
-        error: "Database connection failed",
-      });
-    }
-  }
-  next();
-});
-
-//
-// ============================================================================
-// API ROUTES
-// ============================================================================
-//
-
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/cycles", cycleRoutes);
-app.use("/api/categories", categoryRoutes);
-app.use("/api/class-levels", classLevelRoutes);
 
 //
 // ============================================================================
@@ -173,6 +193,40 @@ app.get("/api/health", (req, res) => {
     dbConnected: dbInitialized,
   });
 });
+
+app.use(async (req, res, next) => {
+  if (req.path === "/api/health") {
+    return next();
+  }
+
+  try {
+    await initializeDatabase();
+    return next();
+  } catch (error) {
+    const statusCode = getMissingDatabaseEnv().length > 0 ? 500 : 503;
+
+    return res.status(statusCode).json({
+      success: false,
+      error: "Database connection failed",
+      details:
+        NODE_ENV === "development"
+          ? error.message
+          : "Check backend database environment variables and connectivity.",
+    });
+  }
+});
+
+//
+// ============================================================================
+// API ROUTES
+// ============================================================================
+//
+
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/cycles", cycleRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/class-levels", classLevelRoutes);
 
 //
 // ============================================================================
@@ -192,34 +246,28 @@ app.use(errorHandler);
 
 //
 // ============================================================================
-// LOCAL SERVER START (NOT FOR SERVERLESS)
+// LOCAL SERVER START
 // ============================================================================
 //
 
-if (!process.env.SERVERLESS) {
+if (!isServerlessRuntime) {
   const startServer = async () => {
     try {
       await initializeDatabase();
 
       app.listen(PORT, () => {
-        console.log(`✓ Server running on http://localhost:${PORT}`);
-        console.log(`✓ Environment: ${NODE_ENV}`);
-        console.log(`✓ API Base URL: http://localhost:${PORT}/api`);
-        console.log(`✓ Health Check: http://localhost:${PORT}/api/health`);
+        console.log(`Server running on http://localhost:${PORT}`);
+        console.log(`Environment: ${NODE_ENV}`);
+        console.log(`API Base URL: http://localhost:${PORT}/api`);
+        console.log(`Health Check: http://localhost:${PORT}/api/health`);
       });
     } catch (error) {
-      console.error("✗ Failed to start server:", error.message);
+      console.error("Failed to start server:", error.message);
       process.exit(1);
     }
   };
 
   startServer();
 }
-
-//
-// ============================================================================
-// EXPORT FOR SERVERLESS
-// ============================================================================
-//
 
 export default app;

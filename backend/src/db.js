@@ -13,13 +13,9 @@ import defineActivityLogModel from "./models/ActivityLog.js";
 
 let sequelize;
 
-// allow using a full connection string (DATABASE_URL) or separate params
 if (sequelizeConfig.url) {
   sequelize = new Sequelize(sequelizeConfig.url, {
-    dialect: sequelizeConfig.dialect,
-    ssl: sequelizeConfig.ssl,
-    dialectOptions: sequelizeConfig.dialectOptions,
-    logging: sequelizeConfig.logging,
+    ...sequelizeConfig,
   });
 } else {
   sequelize = new Sequelize(
@@ -27,12 +23,7 @@ if (sequelizeConfig.url) {
     sequelizeConfig.username,
     sequelizeConfig.password,
     {
-      host: sequelizeConfig.host,
-      port: sequelizeConfig.port,
-      dialect: sequelizeConfig.dialect,
-      ssl: sequelizeConfig.ssl,
-      dialectOptions: sequelizeConfig.dialectOptions,
-      logging: sequelizeConfig.logging,
+      ...sequelizeConfig,
     },
   );
 }

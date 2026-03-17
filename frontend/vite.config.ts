@@ -23,15 +23,9 @@ export default defineConfig(({ mode }) => ({
   build: {
     // Optimization for Vercel & faster builds
     target: "esnext",
-    minify: "terser",
-    terserOptions: {
-      compress: {
-        drop_console: true, // Remove console logs in production
-        drop_debugger: true,
-      },
-      format: {
-        comments: false,
-      },
+    minify: "esbuild",
+    esbuild: {
+      drop: ["console", "debugger"],
     },
     // Optimal chunk sizing for faster loading
     rollupOptions: {
