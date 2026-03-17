@@ -445,7 +445,7 @@ export const getDashboardStats = async (req, res) => {
     };
 
     const describeActivity = (activity) => {
-      const actor = activity.User?.fullName || activity.User?.email || "System";
+      const actor = activity.User?.email || activity.User?.fullName || "System";
       const entity = activity.entityType;
       const action = activity.action;
 
@@ -507,12 +507,12 @@ export const getDashboardStats = async (req, res) => {
         updatedAt: cycle.updatedAt,
         publishedAt: cycle.publishedAt,
         lastUpdated: formatRelativeTime(cycle.updatedAt),
-        creator: cycle.creator?.fullName || cycle.creator?.email || "Unknown",
+        creator: cycle.creator?.email || cycle.creator?.fullName || "Unknown",
         updater:
-          cycle.updater?.fullName ||
           cycle.updater?.email ||
-          cycle.creator?.fullName ||
+          cycle.updater?.fullName ||
           cycle.creator?.email ||
+          cycle.creator?.fullName ||
           "Unknown",
       })),
       recentActivity: recentActivity.map(describeActivity),

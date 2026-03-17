@@ -20,7 +20,7 @@ const navItems = [
   { label: "Users", icon: Users, to: "/admin/users" },
   { label: "Categories", icon: FolderTree, to: "/admin/categories" },
   { label: "Class Levels", icon: FolderTree, to: "/admin/class-levels" },
-  { label: "Settings", icon: Settings, to: "/admin/settings" },
+  // { label: "Settings", icon: Settings, to: "/admin/settings" },
 ];
 
 const AdminSidebar = () => {
@@ -44,7 +44,7 @@ const AdminSidebar = () => {
             animate={{ opacity: 1 }}
             className="font-display font-bold text-sidebar-foreground"
           >
-            BioCycles
+            BioBridge
           </motion.span>
         )}
       </div>
