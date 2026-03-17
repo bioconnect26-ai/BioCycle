@@ -695,7 +695,7 @@ const Index = () => {
         </div>
 
         {/* ── Animated Wave Transition (replaces white fade) ── */}
-        <WaveTransition />
+        {/* <WaveTransition /> */}
 
         {/* Scroll cue */}
         <motion.div
