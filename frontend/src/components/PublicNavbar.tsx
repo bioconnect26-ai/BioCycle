@@ -135,7 +135,7 @@ const PublicNavbar = () => {
           </LayoutGroup>
 
           {/* ── Desktop right side ── */}
-          <div className="hidden md:flex items-center gap-3">
+          {/* <div className="hidden md:flex items-center gap-3">
             <div
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
               style={{
@@ -146,7 +146,7 @@ const PublicNavbar = () => {
             >
               <Sparkles style={{ width: 12, height: 12 }} />
               6 Cycles Live
-            </div>
+            </div> */}
 
             <Link to="/login">
               <motion.button
