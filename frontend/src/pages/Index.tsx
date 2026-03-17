@@ -14,6 +14,8 @@ import { cyclesData } from "@/data/cycles"; // kept for fallback styling
 import CycleCard from "@/components/CycleCard";
 import { useEffect, useRef, useState } from "react";
 import { cycleService, CycleData } from "@/services/cycleService";
+import { categoryService } from "@/services/categoryService";
+import { classLevelService } from "@/services/classLevelService";
 
 /* ─── Typing animation hook ─── */
 function useTypingEffect(words: string[], speed = 80, pause = 1800) {
@@ -297,11 +299,11 @@ function CursorGlow() {
 }
 
 /* ─── Stats ─── */
-const stats = [
-  { icon: BookOpen, value: "6+", label: "Biology Cycles" },
-  { icon: Users, value: "10K+", label: "Students" },
-  { icon: Eye, value: "50K+", label: "Views" },
-  { icon: FlaskConical, value: "100%", label: "Interactive" },
+const defaultStats = [
+  { icon: BookOpen, value: `${cyclesData.length}+`, label: "Biology Cycles" },
+  { icon: Users, value: "4", label: "Categories" },
+  { icon: Eye, value: "3", label: "Learning Levels" },
+  { icon: FlaskConical, value: "0", label: "Live Previews" },
 ];
 
 const fadeUp = {
@@ -341,13 +343,65 @@ const Index = () => {
 
   const [featured, setFeatured] = useState<CycleData[]>([]);
   const [loadingFeatured, setLoadingFeatured] = useState(true);
+  const [heroStats, setHeroStats] = useState(defaultStats);
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoadingFeatured(true);
-        const res = await cycleService.getAllCycles(1, 6);
-        setFeatured(res.data || res);
+        const [cyclesRes, categoriesRes, classLevelsRes] = await Promise.all([
+          cycleService.getAllCycles(1, 6),
+          categoryService.getAllCategories(),
+          classLevelService.getAllClassLevels(),
+        ]);
+
+        const featuredCycles = cyclesRes.data || cyclesRes;
+        setFeatured(featuredCycles);
+
+        const allCategories = Array.isArray(categoriesRes?.data)
+          ? categoriesRes.data
+          : Array.isArray(categoriesRes)
+            ? categoriesRes
+            : [];
+
+        const allClassLevels = Array.isArray(classLevelsRes?.data)
+          ? classLevelsRes.data
+          : Array.isArray(classLevelsRes)
+            ? classLevelsRes
+            : [];
+
+        const totalCycles =
+          Number(cyclesRes?.pagination?.total) ||
+          (Array.isArray(featuredCycles) ? featuredCycles.length : cyclesData.length);
+
+        const mediaReadyCount = Array.isArray(featuredCycles)
+          ? featuredCycles.filter(
+              (cycle) => cycle.videoUrl || cycle.simulationUrl,
+            ).length
+          : 0;
+
+        setHeroStats([
+          {
+            icon: BookOpen,
+            value: `${totalCycles}+`,
+            label: "Biology Cycles",
+          },
+          {
+            icon: Users,
+            value: String(allCategories.length),
+            label: "Categories",
+          },
+          {
+            icon: Eye,
+            value: String(allClassLevels.length),
+            label: "Learning Levels",
+          },
+          {
+            icon: FlaskConical,
+            value: String(mediaReadyCount),
+            label: "Live Previews",
+          },
+        ]);
       } catch (err) {
         console.error("Error loading featured cycles", err);
       } finally {
@@ -661,7 +715,7 @@ const Index = () => {
             transition={{ delay: 1.1, duration: 0.6 }}
             className="flex items-center justify-center gap-6 md:gap-10 flex-wrap"
           >
-            {stats.map((stat, i) => (
+            {heroStats.map((stat, i) => (
               <div key={stat.label} className="flex items-center gap-2.5 group">
                 <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
