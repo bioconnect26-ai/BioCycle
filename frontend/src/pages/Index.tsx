@@ -213,54 +213,54 @@ function MoleculeOrbs() {
   );
 }
 
-/* ─── Animated SVG Wave bottom ─── */
-function WaveTransition() {
-  return (
-    <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none overflow-hidden leading-none">
-      <svg
-        viewBox="0 0 1440 120"
-        xmlns="http://www.w3.org/2000/svg"
-        className="w-full"
-        preserveAspectRatio="none"
-        style={{ display: "block" }}
-      >
-        {/* Back wave — slower */}
-        <motion.path
-          d="M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z"
-          fill="hsl(var(--background))"
-          fillOpacity="0.4"
-          animate={{ x: [0, -18, 0, 12, 0], y: [0, -4, 0, 3, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        />
-        {/* Mid wave */}
-        <motion.path
-          d="M0,80 C360,40 720,100 1080,60 C1260,40 1380,70 1440,80 L1440,120 L0,120 Z"
-          fill="hsl(var(--background))"
-          fillOpacity="0.6"
-          animate={{ x: [0, 14, 0, -10, 0], y: [0, 3, 0, -3, 0] }}
-          transition={{
-            duration: 6,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 0.5,
-          }}
-        />
-        {/* Front wave — solid background fill */}
-        <motion.path
-          d="M0,90 C180,70 360,110 540,90 C720,70 900,110 1080,90 C1260,70 1380,95 1440,90 L1440,120 L0,120 Z"
-          fill="hsl(var(--background))"
-          animate={{ x: [0, -10, 0, 8, 0], y: [0, 2, 0, -2, 0] }}
-          transition={{
-            duration: 5,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 1,
-          }}
-        />
-      </svg>
-    </div>
-  );
-}
+// /* ─── Animated SVG Wave bottom ─── */
+// function WaveTransition() {
+//   return (
+//     <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none overflow-hidden leading-none">
+//       <svg
+//         viewBox="0 0 1440 120"
+//         xmlns="http://www.w3.org/2000/svg"
+//         className="w-full"
+//         preserveAspectRatio="none"
+//         style={{ display: "block" }}
+//       >
+//         {/* Back wave — slower */}
+//         <motion.path
+//           d="M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z"
+//           fill="hsl(var(--background))"
+//           fillOpacity="0.4"
+//           animate={{ x: [0, -18, 0, 12, 0], y: [0, -4, 0, 3, 0] }}
+//           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+//         />
+//         {/* Mid wave */}
+//         <motion.path
+//           d="M0,80 C360,40 720,100 1080,60 C1260,40 1380,70 1440,80 L1440,120 L0,120 Z"
+//           fill="hsl(var(--background))"
+//           fillOpacity="0.6"
+//           animate={{ x: [0, 14, 0, -10, 0], y: [0, 3, 0, -3, 0] }}
+//           transition={{
+//             duration: 6,
+//             repeat: Infinity,
+//             ease: "easeInOut",
+//             delay: 0.5,
+//           }}
+//         />
+//         {/* Front wave — solid background fill */}
+//         <motion.path
+//           d="M0,90 C180,70 360,110 540,90 C720,70 900,110 1080,90 C1260,70 1380,95 1440,90 L1440,120 L0,120 Z"
+//           fill="hsl(var(--background))"
+//           animate={{ x: [0, -10, 0, 8, 0], y: [0, 2, 0, -2, 0] }}
+//           transition={{
+//             duration: 5,
+//             repeat: Infinity,
+//             ease: "easeInOut",
+//             delay: 1,
+//           }}
+//         />
+//       </svg>
+//     </div>
+//   );
+// }
 
 /* ─── Interactive cursor glow ─── */
 function CursorGlow() {
