@@ -737,7 +737,7 @@ const Index = () => {
                     {stat.label}
                   </div>
                 </div>
-                {i < stats.length - 1 && (
+                {i < heroStats.length - 1 && (
                   <div
                     className="hidden md:block w-px h-6 ml-4"
                     style={{ background: "rgba(255,255,255,0.1)" }}
