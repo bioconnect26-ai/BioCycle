@@ -201,6 +201,25 @@ const initializeDatabase = async () => {
 // ============================================================================
 //
 
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "BioCycle API is running",
+    health: "/api/health",
+    endpoints: [
+      "/api/auth",
+      "/api/users",
+      "/api/cycles",
+      "/api/categories",
+      "/api/class-levels",
+    ],
+  });
+});
+
+app.get("/favicon.ico", (req, res) => {
+  res.status(204).end();
+});
+
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,

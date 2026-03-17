@@ -1,4 +1,4 @@
-import { User, ActivityLog, sequelize } from "../db.js";
+import { User, ActivityLog, Cycle, sequelize } from "../db.js";
 import { Op } from "sequelize";
 
 // Get all users with pagination
@@ -286,19 +286,247 @@ export const getPendingEditors = async (req, res) => {
 // Get dashboard stats for admins
 export const getDashboardStats = async (req, res) => {
   try {
-    const totalUsers = await User.count();
-    const activeUsers = await User.count({ where: { status: "active" } });
-    const pendingEditors = await User.count({ where: { status: "pending" } });
-    const totalEditors = await User.count({ where: { role: "editor" } });
+    const now = new Date();
+    const onlineThreshold = new Date(now.getTime() - 15 * 60 * 1000);
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+
+    const weekStart = new Date(now);
+    weekStart.setDate(weekStart.getDate() - 7);
+
+    const [
+      totalUsers,
+      activeUsers,
+      pendingApproval,
+      totalEditors,
+      onlineUsers,
+      lockedUsers,
+      newUsersThisWeek,
+      recentUsers,
+      totalCycles,
+      publishedCycles,
+      draftCycles,
+      pendingReviewCycles,
+      updatedCyclesToday,
+      newCyclesThisWeek,
+      recentCycles,
+      recentActivity,
+      activitySummary,
+      topContributors,
+    ] = await Promise.all([
+      User.count(),
+      User.count({ where: { status: "active" } }),
+      User.count({ where: { status: "pending" } }),
+      User.count({ where: { role: "editor" } }),
+      User.count({
+        where: {
+          status: "active",
+          lastLogin: { [Op.gte]: onlineThreshold },
+        },
+      }),
+      User.count({
+        where: {
+          lockoutUntil: { [Op.gt]: now },
+        },
+      }),
+      User.count({
+        where: {
+          createdAt: { [Op.gte]: weekStart },
+        },
+      }),
+      User.findAll({
+        limit: 5,
+        order: [["lastLogin", "DESC NULLS LAST"]],
+        attributes: [
+          "id",
+          "fullName",
+          "email",
+          "role",
+          "status",
+          "lastLogin",
+          "createdAt",
+        ],
+      }),
+      Cycle.count(),
+      Cycle.count({ where: { status: "published" } }),
+      Cycle.count({ where: { status: "draft" } }),
+      Cycle.count({ where: { status: "pending_review" } }),
+      Cycle.count({
+        where: {
+          updatedAt: { [Op.gte]: todayStart },
+        },
+      }),
+      Cycle.count({
+        where: {
+          createdAt: { [Op.gte]: weekStart },
+        },
+      }),
+      Cycle.findAll({
+        limit: 6,
+        order: [["updatedAt", "DESC"]],
+        attributes: [
+          "id",
+          "title",
+          "slug",
+          "status",
+          "updatedAt",
+          "publishedAt",
+          "createdBy",
+          "updatedBy",
+        ],
+        include: [
+          {
+            model: User,
+            as: "creator",
+            attributes: ["id", "fullName", "email"],
+          },
+          {
+            model: User,
+            as: "updater",
+            attributes: ["id", "fullName", "email"],
+          },
+        ],
+      }),
+      ActivityLog.findAll({
+        limit: 10,
+        order: [["createdAt", "DESC"]],
+        include: [
+          {
+            model: User,
+            attributes: ["id", "fullName", "email", "profileImage"],
+          },
+        ],
+      }),
+      ActivityLog.findAll({
+        attributes: [
+          "action",
+          [sequelize.fn("COUNT", sequelize.col("action")), "count"],
+        ],
+        group: ["action"],
+        raw: true,
+      }),
+      ActivityLog.findAll({
+        attributes: [
+          "userId",
+          [sequelize.fn("COUNT", sequelize.col("ActivityLog.id")), "count"],
+        ],
+        where: {
+          createdAt: { [Op.gte]: weekStart },
+        },
+        include: [
+          {
+            model: User,
+            attributes: ["id", "fullName", "email", "role"],
+          },
+        ],
+        group: ["userId", "User.id"],
+        order: [[sequelize.literal("count"), "DESC"]],
+        limit: 5,
+      }),
+    ]);
+
+    const formatRelativeTime = (date) => {
+      if (!date) return "Never";
+
+      const diffMs = now.getTime() - new Date(date).getTime();
+      const diffMinutes = Math.max(1, Math.floor(diffMs / (1000 * 60)));
+
+      if (diffMinutes < 60) {
+        return `${diffMinutes}m ago`;
+      }
+
+      const diffHours = Math.floor(diffMinutes / 60);
+      if (diffHours < 24) {
+        return `${diffHours}h ago`;
+      }
+
+      const diffDays = Math.floor(diffHours / 24);
+      return `${diffDays}d ago`;
+    };
+
+    const describeActivity = (activity) => {
+      const actor = activity.User?.fullName || activity.User?.email || "System";
+      const entity = activity.entityType;
+      const action = activity.action;
+
+      const verbMap = {
+        create: "created",
+        edit: "updated",
+        delete: "deleted",
+        publish: "published",
+        approve: "approved",
+      };
+
+      return {
+        id: activity.id,
+        title: `${verbMap[action] || action} ${entity}`,
+        user: actor,
+        action,
+        entityType: entity,
+        entityId: activity.entityId,
+        time: formatRelativeTime(activity.createdAt),
+        createdAt: activity.createdAt,
+        changes: activity.changes,
+      };
+    };
 
     res.json({
       success: true,
-      stats: {
-        totalUsers,
-        activeUsers,
-        pendingEditors,
-        totalEditors,
-      },
+      totalUsers,
+      activeUsers,
+      totalEditors,
+      pendingApproval,
+      onlineUsers,
+      lockedUsers,
+      newUsersThisWeek,
+      totalCycles,
+      publishedCycles,
+      draftCycles,
+      pendingReviewCycles,
+      updatedCyclesToday,
+      newCyclesThisWeek,
+      activeEditors: totalEditors,
+      recentUsers: recentUsers.map((user) => ({
+        id: user.id,
+        name: user.fullName,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        lastLogin: user.lastLogin,
+        lastSeen: formatRelativeTime(user.lastLogin),
+        isOnline:
+          user.status === "active" &&
+          Boolean(user.lastLogin && new Date(user.lastLogin) >= onlineThreshold),
+        createdAt: user.createdAt,
+      })),
+      recentCycles: recentCycles.map((cycle) => ({
+        id: cycle.id,
+        title: cycle.title,
+        slug: cycle.slug,
+        status: cycle.status,
+        updatedAt: cycle.updatedAt,
+        publishedAt: cycle.publishedAt,
+        lastUpdated: formatRelativeTime(cycle.updatedAt),
+        creator: cycle.creator?.fullName || cycle.creator?.email || "Unknown",
+        updater:
+          cycle.updater?.fullName ||
+          cycle.updater?.email ||
+          cycle.creator?.fullName ||
+          cycle.creator?.email ||
+          "Unknown",
+      })),
+      recentActivity: recentActivity.map(describeActivity),
+      activitySummary: activitySummary.reduce((acc, item) => {
+        acc[item.action] = Number(item.count);
+        return acc;
+      }, {}),
+      topContributors: topContributors.map((entry) => ({
+        id: entry.userId,
+        name: entry.User?.fullName || entry.User?.email || "Unknown",
+        email: entry.User?.email || "",
+        role: entry.User?.role || "editor",
+        actions: Number(entry.get("count")),
+      })),
     });
   } catch (error) {
     res.status(500).json({

@@ -17,13 +17,61 @@ export interface User {
 }
 
 export interface DashboardStats {
+  totalUsers: number;
+  activeUsers: number;
+  totalEditors: number;
+  onlineUsers: number;
+  lockedUsers: number;
+  newUsersThisWeek: number;
   totalCycles: number;
   publishedCycles: number;
   draftCycles: number;
-  totalUsers: number;
+  pendingReviewCycles: number;
+  updatedCyclesToday: number;
+  newCyclesThisWeek: number;
   activeEditors: number;
   pendingApproval: number;
-  recentActivity: any[];
+  recentActivity: {
+    id: string;
+    title: string;
+    user: string;
+    action: string;
+    entityType: string;
+    entityId: string;
+    time: string;
+    createdAt: string;
+    changes?: Record<string, unknown>;
+  }[];
+  recentUsers: {
+    id: string;
+    name: string;
+    email: string;
+    role: User["role"];
+    status: "active" | "inactive" | "pending";
+    lastLogin?: string;
+    lastSeen: string;
+    isOnline: boolean;
+    createdAt: string;
+  }[];
+  recentCycles: {
+    id: string;
+    title: string;
+    slug: string;
+    status: "draft" | "pending_review" | "published";
+    updatedAt: string;
+    publishedAt?: string;
+    lastUpdated: string;
+    creator: string;
+    updater: string;
+  }[];
+  activitySummary: Record<string, number>;
+  topContributors: {
+    id: string;
+    name: string;
+    email: string;
+    role: User["role"];
+    actions: number;
+  }[];
 }
 
 export const userService = {
