@@ -102,7 +102,7 @@ const PublicNavbar = () => {
                 WebkitBackgroundClip: transparentDark ? undefined : "text",
                 WebkitTextFillColor: transparentDark ? "white" : "transparent",
               }}>
-                Cycles
+                Bridge
               </span>
             </span>
           </Link>
@@ -135,8 +135,8 @@ const PublicNavbar = () => {
           </LayoutGroup>
 
           {/* ── Desktop right side ── */}
-          {/* <div className="hidden md:flex items-center gap-3">
-            <div
+          <div className="hidden md:flex items-center gap-3">
+            {/* <div
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
               style={{
                 background: transparentDark ? "rgba(255,255,255,0.10)" : T.emeraldLight,
