@@ -1,6 +1,18 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+const shouldUseSsl =
+  process.env.DB_SSL === "true" ||
+  Boolean(process.env.DATABASE_URL) ||
+  process.env.NODE_ENV === "production";
+
+const sslConfig = shouldUseSsl
+  ? {
+      require: true,
+      rejectUnauthorized: false,
+    }
+  : undefined;
+
 const common = {
   dialect: "postgres",
   logging: false,
@@ -23,10 +35,9 @@ function makeConfig() {
     return {
       ...common,
       url: process.env.DATABASE_URL,
+      ssl: sslConfig,
       dialectOptions: {
-        ssl: {
-          rejectUnauthorized: false,
-        },
+        ssl: sslConfig,
       },
     };
   }
@@ -38,12 +49,9 @@ function makeConfig() {
     database: process.env.DB_NAME,
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
-    ssl: process.env.DB_SSL === "true",
+    ssl: sslConfig,
     dialectOptions: {
-      ssl:
-        process.env.DB_SSL === "true"
-          ? { require: true, rejectUnauthorized: false }
-          : false,
+      ssl: sslConfig || false,
     },
   };
 }
