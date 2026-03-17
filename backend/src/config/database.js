@@ -32,9 +32,15 @@ const common = {
 
 function makeConfig() {
   if (process.env.DATABASE_URL) {
+    const parsedUrl = new URL(process.env.DATABASE_URL);
+
     return {
       ...common,
-      url: process.env.DATABASE_URL,
+      database: decodeURIComponent(parsedUrl.pathname.replace(/^\//, "")),
+      username: decodeURIComponent(parsedUrl.username),
+      password: decodeURIComponent(parsedUrl.password),
+      host: parsedUrl.hostname,
+      port: Number(parsedUrl.port || 5432),
       ssl: sslConfig,
       dialectOptions: {
         ssl: sslConfig,

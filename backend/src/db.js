@@ -13,13 +13,8 @@ import defineActivityLogModel from "./models/ActivityLog.js";
 
 let sequelize;
 
-if (sequelizeConfig.url) {
-  const { url, ...options } = sequelizeConfig;
-  sequelize = new Sequelize(url, options);
-} else {
-  const { database, username, password, ...options } = sequelizeConfig;
-  sequelize = new Sequelize(database, username, password, options);
-}
+const { database, username, password, ...options } = sequelizeConfig;
+sequelize = new Sequelize(database, username, password, options);
 
 // Define Models
 const User = defineUserModel(sequelize);
