@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Dna,
@@ -253,7 +253,7 @@ const LoginPage = () => {
             <Dna className="w-10 h-10 text-primary-foreground" />
           </div>
           <h2 className="font-display text-4xl font-bold gradient-text-hero mb-4">
-            BioCycles Admin
+            ByoBridge Admin
           </h2>
           <p className="text-muted-foreground text-lg">
             Manage biology cycles, users, and content from your dashboard.
@@ -273,7 +273,7 @@ const LoginPage = () => {
               <Dna className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="font-display font-bold text-lg text-foreground">
-              BioCycles
+              ByoBridge
             </span>
           </div>
 
@@ -373,7 +373,7 @@ const LoginPage = () => {
                       value={email}
                       onChange={handleEmailChange}
                       disabled={isLocked || loading}
-                      placeholder="admin@biocycles.com"
+                      placeholder="admin@byobridge.com"
                       autoComplete="email"
                       className={`w-full pl-11 pr-4 py-3 rounded-xl border bg-card text-foreground placeholder:text-muted-foreground focus:ring-2 outline-none transition-all ${
                         email && !isValidEmail(email)
@@ -395,7 +395,7 @@ const LoginPage = () => {
                       value={password}
                       onChange={handlePasswordChange}
                       disabled={isLocked || loading}
-                      placeholder="••••••••"
+                      placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                       autoComplete="current-password"
                       className={`w-full pl-11 pr-11 py-3 rounded-xl border bg-card text-foreground placeholder:text-muted-foreground focus:ring-2 outline-none transition-all ${
                         password && password.length < 8
@@ -442,7 +442,7 @@ const LoginPage = () => {
                   to="/"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  ← Back to Home
+                  â† Back to Home
                 </Link>
               </div>
 
@@ -637,3 +637,4 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+

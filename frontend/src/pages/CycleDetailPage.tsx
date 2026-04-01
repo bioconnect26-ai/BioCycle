@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+﻿import { useParams, Link } from "react-router-dom";
 import { motion, useScroll, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useMemo } from "react";
 import {
@@ -20,10 +20,10 @@ import FloatingParticles from "@/components/FloatingParticles";
 import { cycleService, CycleData } from "@/services/cycleService";
 import { authService } from "@/services/authService";
 
-/* ─────────────────────────────────────────────────────────
-   Design tokens — all colour decisions live here so every
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Design tokens â€” all colour decisions live here so every
    sub-component stays consistent with the light-mode theme.
-───────────────────────────────────────────────────────── */
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const T = {
   emerald: "#059669",
   emeraldLight: "#d1fae5",
@@ -47,9 +47,9 @@ const T = {
   shadowLg: "0 16px 60px rgba(5,150,105,0.16)",
 };
 
-/* ══════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    ORBITAL MAP
-══════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function OrbitalCycleMap({
   steps,
   activeStep,
@@ -172,9 +172,9 @@ function OrbitalCycleMap({
   );
 }
 
-/* ══════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    FLASHCARD (3-D flip)
-══════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function Flashcard({
   step,
   index,
@@ -268,7 +268,7 @@ function Flashcard({
             className="text-xs font-mono tracking-widest uppercase"
             style={{ color: T.emerald }}
           >
-            Deep Dive ✦
+            Deep Dive âœ¦
           </span>
           <p className="text-sm leading-relaxed" style={{ color: T.textMid }}>
             {step.detail}
@@ -296,9 +296,9 @@ function Flashcard({
   );
 }
 
-/* ══════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    QUIZ
-══════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function QuickQuiz({
   questions,
 }: {
@@ -374,10 +374,10 @@ function QuickQuiz({
           className="text-6xl mb-4"
         >
           {score >= questions.length * 0.8
-            ? "🏆"
+            ? "ðŸ†"
             : score >= questions.length * 0.5
-              ? "🌟"
-              : "💪"}
+              ? "ðŸŒŸ"
+              : "ðŸ’ª"}
         </motion.div>
         <h3
           className="font-display text-2xl font-bold mb-2"
@@ -481,9 +481,9 @@ function QuickQuiz({
                 style={{ background: labelBg, color: labelColor }}
               >
                 {reveal && isCorrect
-                  ? "✓"
+                  ? "âœ“"
                   : reveal && isSelected
-                    ? "✗"
+                    ? "âœ—"
                     : String.fromCharCode(65 + i)}
               </span>
               {opt}
@@ -515,9 +515,9 @@ function QuickQuiz({
   );
 }
 
-/* ══════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    MEMORY PALACE
-══════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function MemoryPalace({
   entries,
 }: {
@@ -568,7 +568,7 @@ function MemoryPalace({
           className="text-xs font-mono uppercase tracking-widest mb-2"
           style={{ color: T.textXSoft }}
         >
-          🏛️ Method of Loci — visualize each location
+          ðŸ›ï¸ Method of Loci â€” visualize each location
         </p>
         <p className="text-sm" style={{ color: T.textMid }}>
           {entries.length} locations to anchor your memory
@@ -631,9 +631,9 @@ function MemoryPalace({
   );
 }
 
-/* ══════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    TABS
-══════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const TABS = [
   { id: "journey", label: "Journey", icon: Zap },
   { id: "flashcards", label: "Flashcards", icon: Eye },
@@ -642,9 +642,9 @@ const TABS = [
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
 
-/* ══════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    PAGE
-══════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const CycleDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const [cycle, setCycle] = useState<CycleData | null>(null);
@@ -711,7 +711,7 @@ const CycleDetailPage = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <PublicNavbar />
-        <div>Loading cycle…</div>
+        <div>Loading cycleâ€¦</div>
       </div>
     );
   }
@@ -730,7 +730,7 @@ const CycleDetailPage = () => {
             style={{ color: T.emerald }}
             className="hover:underline"
           >
-            ← Back to Explore
+            â† Back to Explore
           </Link>
         </div>
       </div>
@@ -782,7 +782,7 @@ const CycleDetailPage = () => {
         }}
       />
 
-      {/* ════ DARK HERO ════ */}
+      {/* â•â•â•â• DARK HERO â•â•â•â• */}
       <section className="relative pt-16 min-h-[68vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 gradient-hero" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_30%_50%,rgba(52,211,153,0.08)_0%,transparent 70%)]" />
@@ -988,7 +988,7 @@ const CycleDetailPage = () => {
         </div>
       </section>
 
-      {/* ════ LIGHT BODY ════ */}
+      {/* â•â•â•â• LIGHT BODY â•â•â•â• */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           {/* Tab bar */}
@@ -1040,7 +1040,7 @@ const CycleDetailPage = () => {
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.3 }}
             >
-              {/* ── JOURNEY ── */}
+              {/* â”€â”€ JOURNEY â”€â”€ */}
               {activeTab === "journey" && (
                 <div className="grid lg:grid-cols-5 gap-6">
                   {/* Steps list */}
@@ -1280,7 +1280,7 @@ const CycleDetailPage = () => {
                 </div>
               )}
 
-              {/* ── FLASHCARDS ── */}
+              {/* â”€â”€ FLASHCARDS â”€â”€ */}
               {activeTab === "flashcards" && (
                 <div className="max-w-2xl mx-auto">
                   <div className="text-center mb-8">
@@ -1291,7 +1291,7 @@ const CycleDetailPage = () => {
                       Flip to Remember
                     </h2>
                     <p className="text-sm" style={{ color: T.textSoft }}>
-                      Active recall — tap the card to reveal the explanation
+                      Active recall â€” tap the card to reveal the explanation
                     </p>
                   </div>
                   {cycle.flashcards && cycle.flashcards.length > 0 ? (
@@ -1403,7 +1403,7 @@ const CycleDetailPage = () => {
                               className="text-xs font-mono tracking-widest uppercase"
                               style={{ color: T.emerald }}
                             >
-                              Deep Dive ✦
+                              Deep Dive âœ¦
                             </span>
                             <p
                               className="text-sm leading-relaxed"
@@ -1506,7 +1506,7 @@ const CycleDetailPage = () => {
                 </div>
               )}
 
-              {/* ── QUIZ ── */}
+              {/* â”€â”€ QUIZ â”€â”€ */}
               {activeTab === "quiz" && (
                 <div>
                   <div className="text-center mb-8">
@@ -1524,7 +1524,7 @@ const CycleDetailPage = () => {
                 </div>
               )}
 
-              {/* ── MEMORY ── */}
+              {/* â”€â”€ MEMORY â”€â”€ */}
               {activeTab === "memory" && (
                 <div className="max-w-2xl mx-auto">
                   <div className="text-center mb-8">
@@ -1547,7 +1547,7 @@ const CycleDetailPage = () => {
         </div>
       </section>
 
-      {/* ── VIDEO & SIMULATION ── */}
+      {/* â”€â”€ VIDEO & SIMULATION â”€â”€ */}
       <section
         className="py-16"
         style={{ background: "var(--background, #f8fafc)" }}
@@ -1660,7 +1660,7 @@ const CycleDetailPage = () => {
         style={{ borderTop: `1px solid ${T.border}` }}
       >
         <p className="text-sm" style={{ color: T.textXSoft }}>
-          © 2026 BioCycles. Making biology interactive and engaging.
+          © 2026 ByoBridge. Making biology interactive and engaging.
         </p>
       </footer>
     </div>
@@ -1668,3 +1668,4 @@ const CycleDetailPage = () => {
 };
 
 export default CycleDetailPage;
+

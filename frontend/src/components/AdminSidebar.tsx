@@ -44,7 +44,7 @@ const AdminSidebar = () => {
             animate={{ opacity: 1 }}
             className="font-display font-bold text-sidebar-foreground"
           >
-            BioBridge
+            ByoBridge
           </motion.span>
         )}
       </div>

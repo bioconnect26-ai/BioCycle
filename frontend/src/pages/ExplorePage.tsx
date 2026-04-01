@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+﻿import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useScroll } from "framer-motion";
 import {
   Search,
@@ -17,7 +17,7 @@ import { cycleService, CycleData } from "@/services/cycleService";
 import { categoryService } from "@/services/categoryService";
 import { classLevelService } from "@/services/classLevelService";
 
-/* ─── Design tokens (matches CycleDetailPage light theme) ─── */
+/* â”€â”€â”€ Design tokens (matches CycleDetailPage light theme) â”€â”€â”€ */
 const T = {
   emerald: "#059669",
   emeraldLight: "#d1fae5",
@@ -37,7 +37,7 @@ const T = {
   shadowMd: "0 8px 40px rgba(5,150,105,0.13)",
 };
 
-/* ─── Class level badge colours ─── */
+/* â”€â”€â”€ Class level badge colours â”€â”€â”€ */
 const classLevelColor: Record<
   string,
   { bg: string; text: string; border: string }
@@ -48,7 +48,7 @@ const classLevelColor: Record<
   "12th": { bg: "#eff6ff", text: "#1e40af", border: "#93c5fd" },
 };
 
-/* ─── Animated counter ─── */
+/* â”€â”€â”€ Animated counter â”€â”€â”€ */
 function CountBadge({ count }: { count: number }) {
   return (
     <AnimatePresence mode="wait">
@@ -67,7 +67,7 @@ function CountBadge({ count }: { count: number }) {
   );
 }
 
-/* ─── List-view row card ─── */
+/* â”€â”€â”€ List-view row card â”€â”€â”€ */
 function CycleListRow({ cycle, index }: { cycle: any; index: number }) {
   const Icon = cycle.icon;
   const diff =
@@ -174,7 +174,7 @@ function CycleListRow({ cycle, index }: { cycle: any; index: number }) {
   );
 }
 
-/* ─── Floating biology blobs ─── */
+/* â”€â”€â”€ Floating biology blobs â”€â”€â”€ */
 function AmbientBlobs() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -206,9 +206,9 @@ function AmbientBlobs() {
   );
 }
 
-/* ══════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    PAGE
-══════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const ExplorePage = () => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
@@ -296,7 +296,7 @@ const ExplorePage = () => {
         }}
       />
 
-      {/* ════ HERO BANNER ════ */}
+      {/* â•â•â•â• HERO BANNER â•â•â•â• */}
       <div className="relative pt-24 pb-16 overflow-hidden">
         <AmbientBlobs />
 
@@ -356,7 +356,7 @@ const ExplorePage = () => {
               className="text-lg max-w-xl mx-auto mb-8"
               style={{ color: T.textSoft }}
             >
-              Search, filter, and discover interactive biology processes — from
+              Search, filter, and discover interactive biology processes â€” from
               cell division to the Krebs cycle.
             </p>
 
@@ -387,7 +387,7 @@ const ExplorePage = () => {
         </div>
       </div>
 
-      {/* ════ SEARCH + FILTERS ════ */}
+      {/* â•â•â•â• SEARCH + FILTERS â•â•â•â• */}
       <div
         className="sticky top-[56px] z-40 py-4"
         style={{
@@ -412,7 +412,7 @@ const ExplorePage = () => {
               <input
                 ref={inputRef}
                 type="text"
-                placeholder="Search cycles, tags, descriptions…"
+                placeholder="Search cycles, tags, descriptionsâ€¦"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-11 pr-10 py-3 rounded-xl text-sm outline-none transition-all duration-200"
@@ -612,7 +612,7 @@ const ExplorePage = () => {
         </div>
       </div>
 
-      {/* ════ ACTIVE FILTER PILLS ════ */}
+      {/* â•â•â•â• ACTIVE FILTER PILLS â•â•â•â• */}
       <AnimatePresence>
         {hasFilters && (
           <motion.div
@@ -670,7 +670,7 @@ const ExplorePage = () => {
               </span>
             )}
             <span className="text-xs ml-1" style={{ color: T.textXSoft }}>
-              — showing{" "}
+              â€” showing{" "}
               <strong style={{ color: T.emerald }}>{filtered.length}</strong> of{" "}
               {allCycles.length}
             </span>
@@ -678,7 +678,7 @@ const ExplorePage = () => {
         )}
       </AnimatePresence>
 
-      {/* ════ GRID / LIST ════ */}
+      {/* â•â•â•â• GRID / LIST â•â•â•â• */}
       <div className="container mx-auto px-4 py-8 pb-20">
         {loading ? (
           <div className="glass-panel p-12 text-center text-muted-foreground">
@@ -739,7 +739,7 @@ const ExplorePage = () => {
                   }}
                   className="text-6xl mb-6 inline-block"
                 >
-                  🔬
+                  ðŸ”¬
                 </motion.div>
                 <h3
                   className="font-display text-2xl font-bold mb-2"
@@ -769,7 +769,7 @@ const ExplorePage = () => {
         style={{ borderTop: `1px solid ${T.border}` }}
       >
         <p className="text-sm" style={{ color: T.textXSoft }}>
-          © 2026 BioCycles. Making biology interactive and engaging.
+          © 2026 ByoBridge. Making biology interactive and engaging.
         </p>
       </footer>
     </div>
@@ -777,3 +777,4 @@ const ExplorePage = () => {
 };
 
 export default ExplorePage;
+
