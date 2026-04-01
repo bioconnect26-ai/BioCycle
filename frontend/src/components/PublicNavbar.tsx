@@ -96,7 +96,7 @@ const PublicNavbar = () => {
               className="font-display font-bold text-lg transition-colors duration-300"
               style={{ color: logoTextColor }}
             >
-              Bio
+              Byo
               <span style={{
                 background: transparentDark ? undefined : T.gradHero,
                 WebkitBackgroundClip: transparentDark ? undefined : "text",

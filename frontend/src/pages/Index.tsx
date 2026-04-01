@@ -1,4 +1,4 @@
-﻿import {
+import {
   motion,
   useScroll,
   useTransform,
@@ -21,7 +21,7 @@ import {
 import { categoryService } from "@/services/categoryService";
 import { classLevelService } from "@/services/classLevelService";
 
-/* â”€â”€â”€ Typing animation hook â”€â”€â”€ */
+/* ─── Typing animation hook ─── */
 function useTypingEffect(words: string[], speed = 80, pause = 1800) {
   const [displayed, setDisplayed] = useState("");
   const [wordIdx, setWordIdx] = useState(0);
@@ -54,7 +54,7 @@ function useTypingEffect(words: string[], speed = 80, pause = 1800) {
   return displayed;
 }
 
-/* â”€â”€â”€ DNA Helix Canvas â”€â”€â”€ */
+/* ─── DNA Helix Canvas ─── */
 function DNAHelix() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -174,7 +174,7 @@ function DNAHelix() {
   );
 }
 
-/* â”€â”€â”€ Floating Molecule Nodes â”€â”€â”€ */
+/* ─── Floating Molecule Nodes ─── */
 function MoleculeOrbs() {
   const orbs = [
     { size: 10, x: "12%", y: "22%", color: "#34d399", delay: 0, dur: 6 },
@@ -219,7 +219,7 @@ function MoleculeOrbs() {
   );
 }
 
-// /* â”€â”€â”€ Animated SVG Wave bottom â”€â”€â”€ */
+// /* ─── Animated SVG Wave bottom ─── */
 // function WaveTransition() {
 //   return (
 //     <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none overflow-hidden leading-none">
@@ -230,7 +230,7 @@ function MoleculeOrbs() {
 //         preserveAspectRatio="none"
 //         style={{ display: "block" }}
 //       >
-//         {/* Back wave â€” slower */}
+//         {/* Back wave — slower */}
 //         <motion.path
 //           d="M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z"
 //           fill="hsl(var(--background))"
@@ -251,7 +251,7 @@ function MoleculeOrbs() {
 //             delay: 0.5,
 //           }}
 //         />
-//         {/* Front wave â€” solid background fill */}
+//         {/* Front wave — solid background fill */}
 //         <motion.path
 //           d="M0,90 C180,70 360,110 540,90 C720,70 900,110 1080,90 C1260,70 1380,95 1440,90 L1440,120 L0,120 Z"
 //           fill="hsl(var(--background))"
@@ -268,7 +268,7 @@ function MoleculeOrbs() {
 //   );
 // }
 
-/* â”€â”€â”€ Interactive cursor glow â”€â”€â”€ */
+/* ─── Interactive cursor glow ─── */
 function CursorGlow() {
   const [pos, setPos] = useState({ x: -300, y: -300 });
   const heroRef = useRef<HTMLDivElement>(null);
@@ -302,7 +302,7 @@ function CursorGlow() {
   );
 }
 
-/* â”€â”€â”€ Stats â”€â”€â”€ */
+/* ─── Stats ─── */
 const defaultStats = [
   { icon: BookOpen, value: `${cyclesData.length}+`, label: "Biology Cycles" },
   { icon: Users, value: "4", label: "Categories" },
@@ -332,7 +332,7 @@ const cycleWords = [
   "Meiosis",
 ];
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ════════════════════════════════════════════ */
 const Index = () => {
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
@@ -439,7 +439,7 @@ const Index = () => {
         }}
       />
 
-      {/* â•â•â•â•â•â•â•â•â•â• HERO â•â•â•â•â•â•â•â•â•â• */}
+      {/* ══════════ HERO ══════════ */}
       <motion.section
         style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
         className="relative min-h-screen flex items-center justify-center overflow-hidden"
@@ -450,14 +450,14 @@ const Index = () => {
           style={{ backgroundImage: `url(${heroBg})` }}
         />
 
-        {/* Dark layered overlays â€” NO white at bottom */}
+        {/* Dark layered overlays — NO white at bottom */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#030d0a]/90 via-[#041a11]/70 to-[#030d0a]/95" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_40%,rgba(6,20,14,0.3)_0%,transparent_100%)]" />
 
         {/* Teal atmospheric glow */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_50%_35%,rgba(52,211,153,0.07)_0%,transparent_65%)]" />
 
-        {/* Grid overlay â€” feels like a biology lab / microscope grid */}
+        {/* Grid overlay — feels like a biology lab / microscope grid */}
         <div
           className="absolute inset-0 opacity-[0.03] pointer-events-none"
           style={{
@@ -525,7 +525,7 @@ const Index = () => {
         {/* Floating particles */}
         <FloatingParticles count={30} />
 
-        {/* â”€â”€ Main Content â”€â”€ */}
+        {/* ── Main Content ── */}
         <div className="relative z-10 container mx-auto px-4 text-center max-w-5xl pt-24 md:pt-28">
           {/* Badge */}
           <motion.div
@@ -656,7 +656,7 @@ const Index = () => {
             <span style={{ color: "rgba(167,243,208,0.85)" }}>
               immersive animations
             </span>
-            , interactive diagrams, and step-by-step breakdowns â€” built for
+            , interactive diagrams, and step-by-step breakdowns — built for
             students who learn by doing.
           </motion.p>
 
@@ -762,7 +762,7 @@ const Index = () => {
           </motion.div>
         </div>
 
-        {/* â”€â”€ Animated Wave Transition (replaces white fade) â”€â”€ */}
+        {/* ── Animated Wave Transition (replaces white fade) ── */}
         {/* <WaveTransition /> */}
 
         {/* Scroll cue */}
@@ -790,7 +790,7 @@ const Index = () => {
         </motion.div>
       </motion.section>
 
-      {/* â•â•â•â•â•â•â•â•â•â• FEATURED CYCLES â•â•â•â•â•â•â•â•â•â• */}
+      {/* ══════════ FEATURED CYCLES ══════════ */}
       <section id="categories" className="py-20">
         <div className="container mx-auto px-4">
           <motion.div
@@ -895,7 +895,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* â•â•â•â•â•â•â•â•â•â• FOOTER â•â•â•â•â•â•â•â•â•â• */}
+      {/* ══════════ FOOTER ══════════ */}
       <footer className="border-t border-border py-12">
         <div className="container mx-auto px-4 text-center">
           <p className="text-muted-foreground text-sm">

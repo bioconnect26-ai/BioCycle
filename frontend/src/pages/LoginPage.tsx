@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Dna,
@@ -395,7 +395,7 @@ const LoginPage = () => {
                       value={password}
                       onChange={handlePasswordChange}
                       disabled={isLocked || loading}
-                      placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                      placeholder="••••••••"
                       autoComplete="current-password"
                       className={`w-full pl-11 pr-11 py-3 rounded-xl border bg-card text-foreground placeholder:text-muted-foreground focus:ring-2 outline-none transition-all ${
                         password && password.length < 8
@@ -442,7 +442,7 @@ const LoginPage = () => {
                   to="/"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  â† Back to Home
+                  ← Back to Home
                 </Link>
               </div>
 
