@@ -272,7 +272,8 @@ export const createCycle = async (req, res) => {
       icon,
       color,
       createdBy: req.userId,
-      status: "draft",
+      status: "published",
+      publishedAt: new Date(),
     });
 
     // Add steps (journey)
@@ -440,7 +441,8 @@ export const updateCycle = async (req, res) => {
       icon: icon || cycle.icon,
       color: color || cycle.color,
       updatedBy: req.userId,
-      status: "draft", // Reset to draft when edited
+      status: "published",
+      publishedAt: cycle.publishedAt || new Date(),
     });
 
     // Update steps if provided (journey)
@@ -520,6 +522,7 @@ export const updateCycle = async (req, res) => {
     const updatedCycle = await Cycle.findByPk(cycle.id, {
       include: [
         { model: Category, as: "category" },
+        { model: ClassLevel, as: "classLevel" },
         { model: CycleStep, as: "steps" },
         { model: Flashcard, as: "flashcards" },
         { model: QuizQuestion, as: "quizQuestions" },

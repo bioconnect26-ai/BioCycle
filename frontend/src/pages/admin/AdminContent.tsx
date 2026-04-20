@@ -2,7 +2,6 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Edit,
-  Eye,
   Plus,
   Trash2,
   X,
@@ -449,16 +448,6 @@ const AdminContent = () => {
     } catch (err: any) {
       console.error("Failed to delete cycle:", err);
       setError(err.response?.data?.message || "Failed to delete cycle");
-    }
-  };
-
-  const handlePublish = async (id: string) => {
-    try {
-      await cycleService.publishCycle(id);
-      await loadData();
-    } catch (err: any) {
-      console.error("Failed to publish cycle:", err);
-      setError(err.response?.data?.message || "Failed to publish cycle");
     }
   };
 
@@ -1260,15 +1249,6 @@ const AdminContent = () => {
                       >
                         <Edit className="w-4 h-4 text-blue-500" />
                       </button>
-                      {cycle.status !== "published" && (
-                        <button
-                          onClick={() => handlePublish(cycle.id)}
-                          className="p-2 hover:bg-accent rounded-lg transition-colors"
-                          title="Publish"
-                        >
-                          <Eye className="w-4 h-4 text-emerald-500" />
-                        </button>
-                      )}
                       <button
                         onClick={() => handleDelete(cycle.id)}
                         className="p-2 hover:bg-red-500/10 rounded-lg transition-colors"
